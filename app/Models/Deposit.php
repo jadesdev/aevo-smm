@@ -12,16 +12,18 @@ class Deposit extends Model
     protected $hidden = [
         'user_id',
         'response',
-        "deleted_at",'trx',
+        'deleted_at', 'trx',
     ];
-    function user(){
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $params = ['user:username','user:lname','user:fname','user:email'];
+            $params = ['user:username', 'user:lname', 'user:fname', 'user:email'];
             $query->where(function ($q) use ($params, $search) {
                 foreach ($params as $key => $param) {
                     $relationData = explode(':', $param);
@@ -33,13 +35,14 @@ class Deposit extends Model
                     }
                 }
             })
-            ->orWhere('name', 'like', "%$search%")
-            ->orWhere('gateway', 'like', "%$search%")
-            ->orWhere('code', 'like', "%$search%")
-            ->orWhere('message', 'like', "%$search%")
-            ->orWhere('amount', 'like', "%$search%");
+                ->orWhere('name', 'like', "%$search%")
+                ->orWhere('gateway', 'like', "%$search%")
+                ->orWhere('code', 'like', "%$search%")
+                ->orWhere('message', 'like', "%$search%")
+                ->orWhere('amount', 'like', "%$search%");
         });
     }
+
     private function relationSearch($query, $relation, $columns, $search)
     {
         foreach (explode(',', $columns) as $column) {
@@ -47,6 +50,7 @@ class Deposit extends Model
                 $q->where($column, 'like', "%$search%");
             });
         }
+
         return $query;
     }
 }

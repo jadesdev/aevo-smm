@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TicketComment extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $fillable = [
-        'ticket_id', 'comment','type',
+        'ticket_id', 'comment', 'type',
     ];
+
     public function userComment()
     {
         return $this->where('type', 0);

@@ -5,39 +5,41 @@ namespace App\Utility;
 use Illuminate\Support\Facades\Http;
 
 class MonnifyUtility
-
 {
     protected $contractcode;
-    protected $apikey ;
+
+    protected $apikey;
+
     protected $secretkey;
-    protected $baseurl ;
+
+    protected $baseurl;
 
     public function __construct()
     {
         $this->contractcode = env('MONNIFY_CONTRACT');
         $this->apikey = env('MONNIFY_API_KEY');
         $this->secretkey = env('MONNIFY_SECRET_KEY');
-        if(sys_setting('monnify_demo') == 1){
-            $this->baseurl = "https://sandbox.monnify.com/api";
-        }
-        else {
-        $this->baseurl = "https://api.monnify.com/api";
+        if (sys_setting('monnify_demo') == 1) {
+            $this->baseurl = 'https://sandbox.monnify.com/api';
+        } else {
+            $this->baseurl = 'https://api.monnify.com/api';
         }
     }
 
     public function generateReference()
     {
-        return 'mfy_' . uniqid(time());
+        return 'mfy_'.uniqid(time());
     }
+
     public function getHeader()
     {
         $credentials = base64_encode($this->apikey.':'.$this->secretkey);
 
         $response = Http::withHeaders([
-            'Authorization' => 'Basic '.$credentials
-        ])->post($this->baseurl.'/v1/auth/login' );
+            'Authorization' => 'Basic '.$credentials,
+        ])->post($this->baseurl.'/v1/auth/login');
 
-        return 'Bearer ' . $response['responseBody']['accessToken'];
+        return 'Bearer '.$response['responseBody']['accessToken'];
     }
 
     public function initializePayment($data)
@@ -47,14 +49,14 @@ class MonnifyUtility
             'customerEmail' => $data['email'],
             'customerName' => $data['name'],
             'paymentReference' => $data['reference'],
-            'currencyCode' =>$data['currency'] ?? "NGN",
+            'currencyCode' => $data['currency'] ?? 'NGN',
             'paymentDescription' => $data['description'],
-            'paymentMethods' => ["CARD"],
-            'redirectUrl' => $data->redirectUrl ?? url('monnify/success') ,
-            "contractCode" => $this->contractcode,
+            'paymentMethods' => ['CARD'],
+            'redirectUrl' => $data->redirectUrl ?? url('monnify/success'),
+            'contractCode' => $this->contractcode,
         ];
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
+            'Authorization' => $this->getHeader(),
         ])->post($this->baseurl.'/v1/merchant/transactions/init-transaction', $formdata)->json();
 
         return $response;
@@ -67,14 +69,14 @@ class MonnifyUtility
             'customerEmail' => $data['email'],
             'customerName' => $data['name'],
             'paymentReference' => $data['reference'],
-            'currencyCode' =>$data['currency'] ?? "NGN",
+            'currencyCode' => $data['currency'] ?? 'NGN',
             'paymentDescription' => $data['description'],
-            'paymentMethods' => ["CARD","ACCOUNT_TRANSFER"],
-            'redirectUrl' => $data['redirectUrl'] ?? url('monnify/success') ,
-            "contractCode" => $this->contractcode,
+            'paymentMethods' => ['CARD', 'ACCOUNT_TRANSFER'],
+            'redirectUrl' => $data['redirectUrl'] ?? url('monnify/success'),
+            'contractCode' => $this->contractcode,
         ];
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
+            'Authorization' => $this->getHeader(),
         ])->post($this->baseurl.'/v1/merchant/transactions/init-transaction', $formdata)->json();
 
         return $response;
@@ -84,7 +86,7 @@ class MonnifyUtility
     public function verifyTransaction($data)
     {
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
+            'Authorization' => $this->getHeader(),
         ])->get($this->baseurl.'/v1/merchant/transactions/query', $data)->json();
 
         return $response;
@@ -98,15 +100,15 @@ class MonnifyUtility
             'customerName' => $data['name'],
             'accountName' => $data['name'],
             'accountReference' => $data['reference'],
-            'currencyCode' =>$data['currency'] ?? "NGN",
-            "contractCode" => $this->contractcode,
-            "getAllAvailableBanks" => true,
+            'currencyCode' => $data['currency'] ?? 'NGN',
+            'contractCode' => $this->contractcode,
+            'getAllAvailableBanks' => true,
             'bvn' => $data['bvn'],
             // "preferredBanks" => ["035","232","058"]
 
         ];
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
+            'Authorization' => $this->getHeader(),
         ])->post($this->baseurl.'/v2/bank-transfer/reserved-accounts', $formdata)->json();
 
         return $response;
@@ -116,26 +118,27 @@ class MonnifyUtility
     public function updateCustomerKyc($ref, $data)
     {
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
-        ])->put($this->baseurl."/v1/bank-transfer/reserved-accounts/".$ref."/kyc-info", $data)->json();
+            'Authorization' => $this->getHeader(),
+        ])->put($this->baseurl.'/v1/bank-transfer/reserved-accounts/'.$ref.'/kyc-info', $data)->json();
+
         return $response;
     }
 
-    //Get Banks
+    // Get Banks
     public function getBanks()
     {
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
+            'Authorization' => $this->getHeader(),
         ])->get($this->baseurl.'/v1/banks')->json();
 
         return $response;
     }
 
-    //Verify BVN and Account
+    // Verify BVN and Account
     public function verifyBvnAcc($data)
     {
         $response = Http::withHeaders([
-            'Authorization' => $this->getHeader()
+            'Authorization' => $this->getHeader(),
         ])->post($this->baseurl.'/v1/vas/bvn-account-match', $data)->json();
 
         return $response;

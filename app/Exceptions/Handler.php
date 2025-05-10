@@ -36,7 +36,7 @@ class Handler extends ExceptionHandler
             if ($request->is('api/*') || $request->is('user-api/*')) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Not authenticated'
+                    'message' => 'Not authenticated',
                 ], 401);
             }
         });
@@ -65,7 +65,7 @@ class Handler extends ExceptionHandler
             // Customize the response based on the exception type
             if ($exception instanceof HttpException) {
                 $statusCode = $exception->getStatusCode();
-                $response['status'] = "error";
+                $response['status'] = 'error';
                 $response['message'] = $exception->getMessage();
             }
             if ($exception instanceof ValidationException) {
@@ -86,9 +86,7 @@ class Handler extends ExceptionHandler
                     'status' => 'error',
                     'message' => 'Too Many Requests.',
                 ], 429);
-            }
-
-            else{
+            } else {
                 $response = [
                     'status' => 'error',
                     'message' => $exception->getMessage(),

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Decoder extends Model
 {
     use HasFactory, SoftDeletes;
+
     public function plans()
     {
         return $this->hasMany(CablePlan::class);

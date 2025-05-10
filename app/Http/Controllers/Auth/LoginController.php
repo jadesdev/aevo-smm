@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Auth;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -31,7 +31,8 @@ class LoginController extends Controller
      */
     // protected $redirectTo = RouteServiceProvider::HOME;
     protected $username;
-    protected $theme ;
+
+    protected $theme;
 
     /**
      * Create a new controller instance.
@@ -43,50 +44,53 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
         $this->username = $this->findUsername();
         switch (sys_setting('homepage_theme')) {
-            case "theme1":
-                $this->theme = "front.";
+            case 'theme1':
+                $this->theme = 'front.';
                 break;
-            case "theme2":
-                $this->theme = "front2.";
+            case 'theme2':
+                $this->theme = 'front2.';
                 break;
-            case "theme3":
-                $this->theme = "front3.";
+            case 'theme3':
+                $this->theme = 'front3.';
                 break;
-            case "theme4":
-                $this->theme = "front4.";
+            case 'theme4':
+                $this->theme = 'front4.';
                 break;
             default:
-                $this->theme = "front.";
+                $this->theme = 'front.';
         }
     }
+
     /**
      * Check user's role and redirect user based on their role
-     * @return
-    */
+     */
     public function authenticated(Request $request, $user)
     {
-        if(auth()->user()->user_role == 'admin' || auth()->user()->user_role == 'staff')
-        {
-            if(session('link') != null){
+        if (auth()->user()->user_role == 'admin' || auth()->user()->user_role == 'staff') {
+            if (session('link') != null) {
                 return redirect(session('link'));
             }
+
             return redirect()->intended('admin');
 
         } else {
-            if(session('link') != null){
+            if (session('link') != null) {
                 return redirect(session('link'));
             }
+
             return redirect()->intended('user');
         }
     }
 
     public function user_login()
     {
-        if (Auth::check()){
+        if (Auth::check()) {
             return redirect()->route('user.index');
         }
+
         return view($this->theme.'login');
     }
+
     public function submit_login(Request $request)
     {
         $this->validateLogin($request);
@@ -109,7 +113,6 @@ class LoginController extends Controller
         // user surpasses their maximum number of attempts they will get locked out.
         $this->incrementLoginAttempts($request);
 
-
         return $this->sendFailedLoginResponse($request);
     }
 
@@ -119,6 +122,7 @@ class LoginController extends Controller
 
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         request()->merge([$fieldType => $login]);
+
         return $fieldType;
     }
 
@@ -134,7 +138,7 @@ class LoginController extends Controller
             'password' => 'required|string',
         ];
 
-        $request->validate($validation_rule,[
+        $request->validate($validation_rule, [
             $this->username() => 'Email or Username is required',
             'password.required' => 'Enter Password',
         ]);

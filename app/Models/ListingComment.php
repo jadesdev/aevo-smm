@@ -9,15 +9,15 @@ class ListingComment extends Model
 {
     use HasFactory;
 
-    public $fillable =[
+    public $fillable = [
         'listing_id',
         'offer_id',
         'type',
-        'message'
+        'message',
     ];
 
     public function offer()
-	{
-		return $this->belongsTo(ListingOffer::class);
-	}
+    {
+        return $this->belongsTo(ListingOffer::class);
+    }
 }

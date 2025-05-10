@@ -16,14 +16,14 @@ class Admin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->user_role == "admin") {
-           return $next($request);
-        }
-        else{
-            if(auth()->check() && (Auth::user()->user_role == 'user' || Auth::user()->user_role == 'staff')) {
+        if (auth()->check() && auth()->user()->user_role == 'admin') {
+            return $next($request);
+        } else {
+            if (auth()->check() && (Auth::user()->user_role == 'user' || Auth::user()->user_role == 'staff')) {
                 return redirect()->route('user.index');
             }
             session(['link' => url()->current()]);
+
             return redirect()->route('admin.login');
         }
     }

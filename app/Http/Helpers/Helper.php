@@ -1,41 +1,40 @@
 <?php
 
 use App\Mail\MainEmail;
-use App\Models\{
-    Currency,
-    Order,
-    PaymentBonus,
-    PointLog,
-    Setting,
-    SystemSetting,
-    Transaction,
-    User
-};
+use App\Models\Currency;
+use App\Models\Order;
+use App\Models\PaymentBonus;
+use App\Models\PointLog;
+use App\Models\Setting;
+use App\Models\SystemSetting;
+use App\Models\Transaction;
+use App\Models\User;
 
-if (!function_exists('static_asset')) {
+if (! function_exists('static_asset')) {
     function static_asset($path, $secure = null)
     {
-        return app('url')->asset('public/assets/' . $path, $secure);
+        return app('url')->asset('public/assets/'.$path, $secure);
     }
 }
-//return file uploaded via uploader
-if (!function_exists('my_asset')) {
+// return file uploaded via uploader
+if (! function_exists('my_asset')) {
     function my_asset($path, $secure = null)
     {
-        return app('url')->asset('public/uploads/' . $path, $secure);
+        return app('url')->asset('public/uploads/'.$path, $secure);
     }
 }
 
-if (!function_exists('get_setting')) {
+if (! function_exists('get_setting')) {
     function get_setting($key)
     {
         $settings = Setting::first();
         $setting = $settings->$key;
+
         return $setting;
     }
 }
 
-if (!function_exists('sys_setting')) {
+if (! function_exists('sys_setting')) {
     function sys_setting($key, $default = null)
     {
         $settings = SystemSetting::all();
@@ -46,13 +45,19 @@ if (!function_exists('sys_setting')) {
 }
 function text_trim($string, $length = null)
 {
-    if (empty($length)) $length = 100;
-    return Str::limit($string, $length, "...");
+    if (empty($length)) {
+        $length = 100;
+    }
+
+    return Str::limit($string, $length, '...');
 }
 function text_trim2($string, $length = null)
 {
-    if (empty($length)) $length = 8;
-    return Str::limit($string, $length, "");
+    if (empty($length)) {
+        $length = 8;
+    }
+
+    return Str::limit($string, $length, '');
 }
 
 function slug($string)
@@ -60,31 +65,33 @@ function slug($string)
     return Illuminate\Support\Str::slug($string);
 }
 // Create slug
-function uniqueSlug($name ,$model)
+function uniqueSlug($name, $model)
 {
     $slug = Str::slug($name);
-    $allSlugs = checkRelatedSlugs($slug , $model);
-    if (! $allSlugs->contains('slug', $slug)){
+    $allSlugs = checkRelatedSlugs($slug, $model);
+    if (! $allSlugs->contains('slug', $slug)) {
         return $slug;
     }
 
     $i = 1;
     $is_contain = true;
     do {
-        $newSlug = $slug . '-' . $i;
-        if (!$allSlugs->contains('slug', $newSlug)) {
+        $newSlug = $slug.'-'.$i;
+        if (! $allSlugs->contains('slug', $newSlug)) {
             $is_contain = false;
+
             return $newSlug;
         }
         $i++;
     } while ($is_contain);
 }
-function checkRelatedSlugs($slug , $model)
+function checkRelatedSlugs($slug, $model)
 {
-    return DB::table($model)->where('slug', 'LIKE', $slug . '%')->get();
+    return DB::table($model)->where('slug', 'LIKE', $slug.'%')->get();
 }
 
-function get_trx_type($status){
+function get_trx_type($status)
+{
     switch ($status) {
         case 1:
             return '<span class="badge bg-success">credit</span>';
@@ -98,7 +105,8 @@ function get_trx_type($status){
 
 }
 
-function get_status($status){
+function get_status($status)
+{
     switch ($status) {
         case 1:
             return '<span class="badge bg-success">Enabled</span>';
@@ -114,7 +122,8 @@ function get_status($status){
     }
 
 }
-function get_trx_status($status){
+function get_trx_status($status)
+{
     switch ($status) {
         case 1:
             return '<span class="badge bg-success">successful</span>';
@@ -133,13 +142,16 @@ function get_trx_status($status){
     }
 
 }
-function payment_gateway($name){
-    if($name == "perfect"){
-        return "perfect money";
+function payment_gateway($name)
+{
+    if ($name == 'perfect') {
+        return 'perfect money';
     }
+
     return $name;
 }
-function get_ticket_status($status){
+function get_ticket_status($status)
+{
     switch ($status) {
         case 1:
             return '<span class="order-status">Answered</span>';
@@ -159,7 +171,8 @@ function get_ticket_status($status){
 
 }
 
-function list_status($status){
+function list_status($status)
+{
     switch ($status) {
         case 1:
             return '<span class="bg-success badge">Sold</span>';
@@ -176,7 +189,8 @@ function list_status($status){
 
 }
 
-function publish_status($status){;
+function publish_status($status)
+{
     switch ($status) {
         case 1:
             return '<span class="bg-success badge">published</span>';
@@ -193,15 +207,16 @@ function publish_status($status){;
 
 }
 
-function listoffer_status($status){
+function listoffer_status($status)
+{
     switch ($status) {
-        case "accepted":
+        case 'accepted':
             return '<span class="bg-success badge">Accepted</span>';
             break;
-        case "pending":
+        case 'pending':
             return '<span class="badge bg-warning">pending</span>';
             break;
-        case "rejected":
+        case 'rejected':
             return '<span class="badge bg-danger">rejected</span>';
             break;
         default:
@@ -209,7 +224,8 @@ function listoffer_status($status){
     }
 
 }
-function get_order_status($status){
+function get_order_status($status)
+{
 
     switch ($status) {
         case 'pending':
@@ -234,14 +250,15 @@ function get_order_status($status){
             $result = '<span class="order-status">Refunded</span>';
             break;
         default:
-            $result = '<span class="badge bg-info">'.$status .'</span>';
+            $result = '<span class="badge bg-info">'.$status.'</span>';
             break;
     }
 
     return $result;
 
 }
-function get_payout_status($status){
+function get_payout_status($status)
+{
     switch ($status) {
         case 1:
             return '<span class="order-status">PAID</span>';
@@ -269,12 +286,14 @@ function getTrx($length = 12)
     for ($i = 0; $i < $length; $i++) {
         $randomString .= $characters[rand(0, $charactersLength - 1)];
     }
+
     return $randomString;
 }
 
 function getAmount($amount, $length = 2)
 {
     $amount = round($amount, $length);
+
     return $amount + 0;
 }
 
@@ -304,40 +323,47 @@ function show_time($date, $format = 'h:ia')
     return \Carbon\Carbon::parse($date)->format($format);
 }
 
-//formats currency
-if (!function_exists('format_price')) {
+// formats currency
+if (! function_exists('format_price')) {
     function format_price($price)
     {
         $fomated_price = number_format($price, 2);
         $currency = get_setting('currency');
-        return $currency .$fomated_price;
+
+        return $currency.$fomated_price;
     }
 }
 function sym_price($price)
 {
     $fomated_price = number_format($price, 2);
     $currency = get_setting('currency_code');
-    return $currency . $fomated_price;
+
+    return $currency.$fomated_price;
 }
 function format_number($price)
 {
     $fomated_price = number_format($price, 2);
+
     return $fomated_price;
 }
-function generateToken(){
+function generateToken()
+{
     $token = bin2hex(random_bytes(16));
+
     return $token;
 }
 
-function send_post_request($url, $postdata = null){
+function send_post_request($url, $postdata = null)
+{
 
-    try{
+    try {
         $response = Http::asMultipart()->post($url, $postdata)->json();
+
         return $response;
-    }catch(\Exception $e){
+    } catch (\Exception $e) {
         return [
-            "status" => "failed",
-            "message" => $e->getMessage()
+            'status' => 'failed',
+            'message' => $e->getMessage(),
         ];
     }
 
@@ -362,7 +388,8 @@ function general_email($email, $sub, $mes)
     }
 }
 
-function send_emails($email, $sub, $mess, $id = null){
+function send_emails($email, $sub, $mess, $id = null)
+{
 
     $data['subject'] = $sub;
     $data['message'] = $mess;
@@ -395,83 +422,91 @@ function formatAndValidateUsername($username)
 
     // Validate the username format using a regular expression
     $pattern = '/^[a-zA-Z][a-zA-Z0-9_-]*$/';
-    if (!preg_match($pattern, $username)) {
+    if (! preg_match($pattern, $username)) {
         return false;
     }
 
     return $username;
 }
 
-if (!function_exists('convert_string_number_list_to_array')) {
+if (! function_exists('convert_string_number_list_to_array')) {
     function convert_str_number_list_to_array($str)
     {
         $ar = [];
-        if (!is_string($str)) {
+        if (! is_string($str)) {
             return $ar;
         }
         $str = rtrim($str, ',');
         $str = ltrim($str, ',');
+
         return $ar = explode(',', $str);
     }
 }
 
-if (!function_exists('group_by_criteria')) {
+if (! function_exists('group_by_criteria')) {
     function group_by_criteria($arr, $criteria)
     {
-        return array_reduce($arr, function($accumulator, $item) use ($criteria) {
+        return array_reduce($arr, function ($accumulator, $item) use ($criteria) {
             $key = (is_callable($criteria)) ? $criteria($item) : $item[$criteria];
-            if (!array_key_exists($key, $accumulator)) {
+            if (! array_key_exists($key, $accumulator)) {
                 $accumulator[$key] = [];
             }
             array_push($accumulator[$key], $item);
+
             return $accumulator;
         }, []);
     }
 }
 
-if (!function_exists('array_sort_by_new_key')) {
-    function array_sort_by_new_key($array = [], $new_key)
+if (! function_exists('array_sort_by_new_key')) {
+    function array_sort_by_new_key($array, $new_key)
     {
         $result = [];
         if (is_array($array) && $array) {
-            $array_new_keys   = array_column($array, $new_key);
-            $result           = array_combine(array_values($array_new_keys), array_values($array));
+            $array_new_keys = array_column($array, $new_key);
+            $result = array_combine(array_values($array_new_keys), array_values($array));
         }
+
         return $result;
     }
 }
 
-function percentageIncrease($percentage, $number) {
+function percentageIncrease($percentage, $number)
+{
     $increase = ($percentage / 100) * ($number * get_setting('currency_rate'));
     $newValue = $number + $increase;
+
     return $newValue;
 }
-if (!function_exists('service_type_format')) {
+if (! function_exists('service_type_format')) {
     function service_type_format($type)
     {
-        $type = strtolower(str_replace(" ", "_", $type));
+        $type = strtolower(str_replace(' ', '_', $type));
+
         return $type;
     }
 }
 
-function error_orders(){
+function error_orders()
+{
     return $orders = Order::whereError(1)->count();
 }
 
-function give_deposit_bonus($id, $method, $amount){
+function give_deposit_bonus($id, $method, $amount)
+{
     $user = User::find($id);
-    if (!$user) {
+    if (! $user) {
         return false;
     }
     $payment_bonus = PaymentBonus::whereMethod($method)->where('amount', '>=', $amount)->whereStatus(1)->first();
-    if (!$payment_bonus) {
+    if (! $payment_bonus) {
         return false;
     }
     // calculate bonus and give
     $bonus = ($payment_bonus->percentage / 100) * $amount;
 
-     // create transaction
-    $trans = new Transaction();
+    // create transaction
+    $trans = new Transaction;
     $trans->user_id = $user->id;
     $trans->type = 1; // 1- credit, 2- debit, 3-others
     $trans->code = getTrx();
@@ -479,27 +514,29 @@ function give_deposit_bonus($id, $method, $amount){
     $trans->amount = $bonus;
     $trans->status = 1;
     $trans->charge = 0;
-    $trans->service = "deposit";
+    $trans->service = 'deposit';
     $trans->old_balance = $user->balance;
     $trans->new_balance = $user->balance + $bonus;
     $trans->save();
-     // Add User Balance
-    $user->balance  += $bonus;
+    // Add User Balance
+    $user->balance += $bonus;
     $user->save();
     // send email
-    $e_mess = "Hi {$user->username}, <br> A credit transaction of <b>".format_price($trans->amount)."</b> occured on your Account.
+    $e_mess = "Hi {$user->username}, <br> A credit transaction of <b>".format_price($trans->amount).'</b> occured on your Account.
     <br> <p> See Below for details of Transactions. </p>
-        Amount : ".format_price($trans->amount) ."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance)."<br> Date : ".show_datetime($trans->created_at);
-    general_email($user->email, 'Credit Alert',$e_mess );
+        Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
+    general_email($user->email, 'Credit Alert', $e_mess);
+
     return true;
 }
 
-function give_affiliate_bonus($id, $amount){
+function give_affiliate_bonus($id, $amount)
+{
     $user = User::find($id);
     $refer = User::find($user->ref_id);
-    $commission = sys_setting('referral_commission') * $amount /100;
+    $commission = sys_setting('referral_commission') * $amount / 100;
     $trxcode = getTrx(12);
-    if($refer){
+    if ($refer) {
         $refer->bonus = $commission + $refer->bonus;
         $refer->save();
         $refer->transactions()->create([
@@ -509,82 +546,86 @@ function give_affiliate_bonus($id, $amount){
             'old_balance' => $refer->bonus - $commission,
             'new_balance' => $refer->bonus,
             'type' => 1,
-            'status'=> 1,
+            'status' => 1,
             'service' => 'referral',
-            'message' => 'Referral Bonus from '. $user->username,
+            'message' => 'Referral Bonus from '.$user->username,
             'code' => $trxcode,
         ]);
         // send email
-        $e_mess = "Hi {$refer->username}, <br> A credit Transaction of <b>".format_price($commission)."</b> occured on your Account.
+        $e_mess = "Hi {$refer->username}, <br> A credit Transaction of <b>".format_price($commission).'</b> occured on your Account.
         <br> <p> See Below for details of Transactions. </p>
-            Amount : ".format_price($commission) ."<br> Details: Referral Bonus from {$user->username} <br> Reference : {$trxcode} <br> Balance: ".format_price($refer->bonus)."<br> Date : ".show_datetime(now());
-        general_email($refer->email, 'Credit Alert',$e_mess );
+            Amount : '.format_price($commission)."<br> Details: Referral Bonus from {$user->username} <br> Reference : {$trxcode} <br> Balance: ".format_price($refer->bonus).'<br> Date : '.show_datetime(now());
+        general_email($refer->email, 'Credit Alert', $e_mess);
     }
-    return;
+
 }
 
-function get_bank_name($code){
-    $banks = file_get_contents(static_asset('banks.json')) ;
-    $banks =  json_decode($banks, true);
+function get_bank_name($code)
+{
+    $banks = file_get_contents(static_asset('banks.json'));
+    $banks = json_decode($banks, true);
 
     foreach ($banks as $bank) {
         // return $code;
         if ($bank['code'] == $code) {
-          return $bank['name'];
+            return $bank['name'];
         }
     }
 
-    return "Select Bank";
+    return 'Select Bank';
 }
 
 function shortNumber($number)
 {
-    $abbrevs = array(12 => 'T', 9 => 'B', 6 => 'M', 3 => 'K', 0 => '');
-    $display = "0";
+    $abbrevs = [12 => 'T', 9 => 'B', 6 => 'M', 3 => 'K', 0 => ''];
+    $display = '0';
     foreach ($abbrevs as $exponent => $abbrev) {
         if (abs($number) >= pow(10, $exponent)) {
             $display = $number / pow(10, $exponent);
             $decimals = ($exponent >= 3 && round($display) < 100) ? 1 : 0;
-            $display = number_format($display, $decimals) . $abbrev;
+            $display = number_format($display, $decimals).$abbrev;
             break;
         }
     }
+
     return $display;
 }
 
-function give_welcomet_bonus($id){
+function give_welcomet_bonus($id)
+{
     $user = User::find($id);
-    if (!$user) {
+    if (! $user) {
         return false;
     }
     if (sys_setting('is_welcome_bonus') != 1) {
         return false;
     }
-    $amount = sys_setting('welcome_bonus') ?? 0 ;
+    $amount = sys_setting('welcome_bonus') ?? 0;
     if ($amount == 0) {
         return false;
     }
-     // create transaction
-    $trans = new Transaction();
+    // create transaction
+    $trans = new Transaction;
     $trans->user_id = $user->id;
     $trans->type = 1; // 1- credit, 2- debit, 3-others
     $trans->code = getTrx();
-    $trans->message = "Welcome bonus of ".format_price($amount);
-    $trans->amount =$amount;
+    $trans->message = 'Welcome bonus of '.format_price($amount);
+    $trans->amount = $amount;
     $trans->status = 1;
     $trans->charge = 0;
-    $trans->service = "deposit";
+    $trans->service = 'deposit';
     $trans->old_balance = $user->balance;
     $trans->new_balance = $user->balance + $amount;
     $trans->save();
-     // Add User Balance
-    $user->balance  += $amount;
+    // Add User Balance
+    $user->balance += $amount;
     $user->save();
     // send email
-    $e_mess = "Hi {$user->username}, <br> A credit transaction of <b>".format_price($trans->amount)."</b> occured on your Account. <br> Yoou got a boonus for registering with us.
+    $e_mess = "Hi {$user->username}, <br> A credit transaction of <b>".format_price($trans->amount).'</b> occured on your Account. <br> Yoou got a boonus for registering with us.
     <br> <p> See Below for details of Transactions. </p>
-        Amount : ".format_price($trans->amount) ."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance)."<br> Date : ".show_datetime($trans->created_at);
-    general_email($user->email, 'Credit Alert',$e_mess );
+        Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
+    general_email($user->email, 'Credit Alert', $e_mess);
+
     return true;
 }
 
@@ -604,19 +645,19 @@ function giveUserPoint($id, $amount)
         $user->points += $point;
         $user->save();
         // save point logs
-        $log = new PointLog();
+        $log = new PointLog;
         $log->user_id = $id;
         $log->point = $point;
         $log->type = 'credit';
         $log->amount = $amount;
         $log->code = getTrx(14);
         $log->status = 1;
-        $log->message = "{$point} {$pcode} earned for spending " . format_price($amount);
+        $log->message = "{$point} {$pcode} earned for spending ".format_price($amount);
         $log->save();
 
         return true;
     }
-    return;
+
 }
 // currency
 function get_all_active_currency()
@@ -635,16 +676,16 @@ function get_default_currency()
 }
 function get_system_currency()
 {
-    if (sys_setting('multi_currency') == 1){
-        if(Session::has('currency')){
+    if (sys_setting('multi_currency') == 1) {
+        if (Session::has('currency')) {
             $code = Session::get('currency');
-        }
-        else{
-            $code =  get_setting('currency_code') ;
+        } else {
+            $code = get_setting('currency_code');
         }
         $currency = Currency::where('code', $code)->first();
+
         return $currency;
-    }else{
+    } else {
         return $currency = Currency::where('code', get_setting('currency_code'))->first();
     }
 }
@@ -652,11 +693,10 @@ function get_system_currency()
 // Convert price to user currency
 function convert_price($price)
 {
-    if(Session::has('currency')){
+    if (Session::has('currency')) {
         $code = Session::get('currency');
-    }
-    else{
-        $code =  get_setting('currency_code') ;
+    } else {
+        $code = get_setting('currency_code');
     }
     $currency = Currency::where('code', $code)->first();
 
@@ -666,19 +706,19 @@ function convert_price($price)
     return $price;
 }
 
-function format_amount($price){
-    if (sys_setting('multi_currency') == 1){
+function format_amount($price)
+{
+    if (sys_setting('multi_currency') == 1) {
         $fomated_price = number_format(convert_price($price), 2);
-        if(Session::has('currency')){
+        if (Session::has('currency')) {
             $code = Session::get('currency');
-        }
-        else{
-            $code =  get_setting('currency_code') ;
+        } else {
+            $code = get_setting('currency_code');
         }
         $currency = Currency::where('code', $code)->first();
 
-        return $currency->symbol . $fomated_price;
-    }else{
+        return $currency->symbol.$fomated_price;
+    } else {
         return format_price($price);
     }
 }

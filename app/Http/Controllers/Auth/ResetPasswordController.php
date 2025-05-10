@@ -33,15 +33,15 @@ class ResetPasswordController extends Controller
     {
         $token = $request->route()->parameter('token');
 
-        if(sys_setting('homepage_theme') == "theme1") {
+        if (sys_setting('homepage_theme') == 'theme1') {
             return view('auth.passwords.reset')->with(
                 ['token' => $token, 'email' => $request->email]
             );
-        }elseif(sys_setting('homepage_theme') == "theme2") {
+        } elseif (sys_setting('homepage_theme') == 'theme2') {
             return view('front2.auth.reset')->with(
                 ['token' => $token, 'email' => $request->email]
             );
-        }else{
+        } else {
             return view('auth.passwords.reset')->with(
                 ['token' => $token, 'email' => $request->email]
             );

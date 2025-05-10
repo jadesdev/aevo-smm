@@ -13,6 +13,6 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         //
-        'webhook*','paystack*','flutter*','monnify*','paypal*','coinbase*','perfectmoney*'
+        'webhook*', 'paystack*', 'flutter*', 'monnify*', 'paypal*', 'coinbase*', 'perfectmoney*',
     ];
 }

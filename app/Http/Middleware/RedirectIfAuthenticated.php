@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,8 +20,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                if(auth()->user()->user_role == 'admin' || auth()->user()->user_role == 'staff')
-                {
+                if (auth()->user()->user_role == 'admin' || auth()->user()->user_role == 'staff') {
                     return redirect()->route('admin.index');
 
                 } else {

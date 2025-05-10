@@ -14,11 +14,13 @@ class CurrencyController extends Controller
     public function index()
     {
         $currencies = Currency::orderByDesc('default')->get();
-        return view('admin.currency',compact('currencies'));
+
+        return view('admin.currency', compact('currencies'));
     }
 
-    function store(Request $request){
-        $currency = new Currency();
+    public function store(Request $request)
+    {
+        $currency = new Currency;
         $currency->name = $request->name;
         $currency->symbol = $request->symbol;
         $currency->code = $request->code;
@@ -27,9 +29,12 @@ class CurrencyController extends Controller
         $currency->save();
 
         Cache::forget('active_currencies');
+
         return back()->withSuccess(__('Currency Created Successfully'));
     }
-    function update(Request $request){
+
+    public function update(Request $request)
+    {
         $currency = Currency::findOrFail($request->id);
         $currency->name = $request->name;
         $currency->symbol = $request->symbol;
@@ -37,25 +42,28 @@ class CurrencyController extends Controller
         $currency->rate = $request->rate;
         $currency->save();
         Cache::forget('active_currencies');
+
         return back()->withSuccess(__('Currency Updated Successfully'));
     }
 
     public function updateStatus(Request $request)
     {
         $currency = Currency::findOrFail($request->id);
-        if($request->status == 0){
+        if ($request->status == 0) {
             if (get_setting('currency_code') == $currency->code) {
-                //dont disable default currency
+                // dont disable default currency
                 return 0;
             }
         }
         $currency->status = $request->status;
         $currency->save();
         Cache::forget('active_currencies');
+
         return ['status' => true];
     }
 
-    function updateDefault(Request $request){
+    public function updateDefault(Request $request)
+    {
         $currency = Currency::findOrFail($request['default_currency']);
         $currency->update(['status' => 1]);
         Setting::first()->update([
@@ -72,13 +80,13 @@ class CurrencyController extends Controller
         return back()->withSuccess(__('Defult Currency Set'));
     }
 
-    function currency_change(Request $request){
+    public function currency_change(Request $request)
+    {
         $currency = Currency::where('code', $request->currency_code)->first();
         $request->session()->put('currency', $request->currency_code);
 
-        $msg =  __('Currency changed to '). $currency->name ;
+        $msg = __('Currency changed to ').$currency->name;
         Cache::forget('active_currencies');
         session()->flash('success', $msg);
     }
-
 }

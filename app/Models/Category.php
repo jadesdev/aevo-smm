@@ -19,7 +19,7 @@ class Category extends Model
     {
         return $this->hasMany(Service::class);
     }
-    
+
     public function activeServices()
     {
         return $this->hasMany(Service::class)->where('status', 1);
@@ -33,7 +33,7 @@ class Category extends Model
     protected $hidden = [
         'created_at',
         'deleted_at',
-        "updated_at",
-        "image",
+        'updated_at',
+        'image',
     ];
 }

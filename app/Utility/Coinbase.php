@@ -5,39 +5,42 @@ namespace App\Utility;
 use Illuminate\Support\Facades\Http;
 
 class Coinbase
-
 {
-
     protected $token;
-    protected $baseurl ;
+
+    protected $baseurl;
 
     public function __construct()
     {
-        $this->baseurl = "https://api.commerce.coinbase.com";
+        $this->baseurl = 'https://api.commerce.coinbase.com';
         $this->token = env('COINBASE_KEY');
     }
 
     public function generateReference()
     {
-        return 'CNB_' . uniqid(time());
+        return 'CNB_'.uniqid(time());
     }
 
-    function getHeader(){
-        $header = array(
+    public function getHeader()
+    {
+        $header = [
             'Content-Type: application/json',
             'Accept: application/json',
             'X-CC-Version: 2023-08-17',
-            'X-CC-Api-Key: '.env('COINBASE_KEY')
-        );
+            'X-CC-Api-Key: '.env('COINBASE_KEY'),
+        ];
+
         return $header;
     }
-    function createCharge($data){
+
+    public function createCharge($data)
+    {
 
         $response = Http::withHeaders([
-            "Content-Type" => 'application/json',
+            'Content-Type' => 'application/json',
             'Accept' => 'application/json',
             'X-CC-Version' => '2023-08-17',
-            'X-CC-Api-Key' => env('COINBASE_KEY')
+            'X-CC-Api-Key' => env('COINBASE_KEY'),
         ])->post($this->baseurl.'/charges', $data)->json();
 
         return $response;

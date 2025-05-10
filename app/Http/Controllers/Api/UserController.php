@@ -19,7 +19,8 @@ use Validator;
 class UserController extends Controller
 {
     //
-    function profile(Request $request){
+    public function profile(Request $request)
+    {
         $user = Auth::user();
         $user['first_name'] = ($user->fname);
         $user['last_name'] = ($user->lname);
@@ -27,30 +28,32 @@ class UserController extends Controller
         $user['bankname'] = get_bank_name($user->bank_name);
         $user['virtual_banks'] = json_decode($user->virtual_banks);
         $user['profile_picture'] = my_asset($user->image);
+
         return response()->json([
             'status' => 'success',
-            'message' => "User Profile Fetched Successful",
-            'user' => $user
+            'message' => 'User Profile Fetched Successful',
+            'user' => $user,
         ]);
 
     }
 
-    function update_profile(Request $request){
+    public function update_profile(Request $request)
+    {
         $user = Auth::user();
         $validator = Validator::make($request->all(), [
-            'fname'     => "required|string|max:60",
-            'lname'      => "required|string|max:60",
-            'country'       => "nullable|string|max:50",
-            'phone'         => "required|string|max:20|unique:users,phone,".$user->id,
-            'address'       => "nullable|string|max:250",
-            'image'         => "nullable|image|mimes:jpg,png,svg,webp|max:10240",
+            'fname' => 'required|string|max:60',
+            'lname' => 'required|string|max:60',
+            'country' => 'nullable|string|max:50',
+            'phone' => 'required|string|max:20|unique:users,phone,'.$user->id,
+            'address' => 'nullable|string|max:250',
+            'image' => 'nullable|image|mimes:jpg,png,svg,webp|max:10240',
         ]);
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()->first(),
-                'error' => $validator->errors()->all()
-            ],422);
+                'error' => $validator->errors()->all(),
+            ], 422);
         }
         try {
             $user->fname = $request->fname;
@@ -59,44 +62,47 @@ class UserController extends Controller
             $user->country = $request->country;
             $user->phone = $request->phone;
             $user->save();
+
             return response()->json([
                 'status' => 'success',
-                'message' => "Profile Updated Successfully"
-            ],200);
+                'message' => 'Profile Updated Successfully',
+            ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             return response()->json([
                 'status' => 'error',
-                'message' =>"Something went worng! Please try again",
-            ],400);
+                'message' => 'Something went worng! Please try again',
+            ], 400);
         }
+
         return $request;
     }
 
-    function update_profile_image(Request $request){
+    public function update_profile_image(Request $request)
+    {
         // validate  request
         $validator = Validator::make($request->all(), [
-            'image'         => "required|image|mimes:jpg,png,svg,webp|max:10240",
+            'image' => 'required|image|mimes:jpg,png,svg,webp|max:10240',
         ]);
         $user = Auth::user();
-        if ($request->hasFile('image')){
+        if ($request->hasFile('image')) {
             $image = $request->file('image');
             $imageName = Str::random(23).'.jpg';
             // if aws or local storage
-            if($user->image != null){
+            if ($user->image != null) {
                 try {
                     unlink(public_path('uploads/'.$user->image));
                 } catch (\Throwable $th) {
-                    //throw $th;
+                    // throw $th;
                 }
             }
-            $image->move(public_path('uploads/user'),$imageName);
-            $user->image = "user/".$imageName;
-        }else{
+            $image->move(public_path('uploads/user'), $imageName);
+            $user->image = 'user/'.$imageName;
+        } else {
             return response()->json([
                 'status' => 'error',
-                'message' =>"Image wasn't uploaded. Please check and try again",
-            ],400);
+                'message' => "Image wasn't uploaded. Please check and try again",
+            ], 400);
         }
         $user->save();
         $user['first_name'] = ($user->fname);
@@ -105,110 +111,119 @@ class UserController extends Controller
         $user['bankname'] = get_bank_name($user->bank_name);
         $user['virtual_banks'] = json_decode($user->virtual_banks);
         $user['profile_picture'] = my_asset($user->image);
+
         return response()->json([
             'status' => 'success',
-            'message' => "User Profile Updated Successful",
-            'user' => $user
+            'message' => 'User Profile Updated Successful',
+            'user' => $user,
         ]);
     }
+
     // Update password
-    function update_password(Request $request){
+    public function update_password(Request $request)
+    {
         $user = Auth::user();
         $validator = Validator::make($request->all(), [
-            'old_password'     => "required|string|max:60",
-            'new_password'      => "required|string|max:60"
+            'old_password' => 'required|string|max:60',
+            'new_password' => 'required|string|max:60',
         ]);
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()->first(),
-                'error' => $validator->errors()->all()
-            ],422);
+                'error' => $validator->errors()->all(),
+            ], 422);
         }
         try {
-            if(Hash::check($request->old_password, $user->password)){
+            if (Hash::check($request->old_password, $user->password)) {
                 $user->password = Hash::make($request->new_password);
                 $user->save();
+
                 return response()->json([
                     'status' => 'success',
-                    'message' => "Password Changed Successfully"
-                ],200);
+                    'message' => 'Password Changed Successfully',
+                ], 200);
             }
 
-            return response()->json(['status' => 'error', "message" =>'Old Password is incorrect'], 400);
-
+            return response()->json(['status' => 'error', 'message' => 'Old Password is incorrect'], 400);
 
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             return response()->json([
                 'status' => 'error',
-                'message' =>"Something went worng! Please try again",
-            ],400);
+                'message' => 'Something went worng! Please try again',
+            ], 400);
         }
+
         return $request;
     }
-    function banks(Request $request){
-        $monnify = new MonnifyUtility();
+
+    public function banks(Request $request)
+    {
+        $monnify = new MonnifyUtility;
         $verifybanks = Cache::get('monnify_banks');
-        if (!$verifybanks) {
+        if (! $verifybanks) {
             $verifybanks = $monnify->getBanks()['responseBody'] ?? [];
             Cache::put('monnify_banks', $verifybanks, 86400);
         }
+
         return response()->json([
             'status' => 'success',
-            'message' => "Bank codes fetched successfully",
-            'data'    => $verifybanks
+            'message' => 'Bank codes fetched successfully',
+            'data' => $verifybanks,
         ]);
     }
-    //KYC
-    function verify_Kyc(Request $request){
+
+    // KYC
+    public function verify_Kyc(Request $request)
+    {
         $user = Auth::user();
-        $monnify = new MonnifyUtility();
+        $monnify = new MonnifyUtility;
         $request->validate([
             'bvn' => 'required|numeric|digits:11',
             'bankCode' => 'required|string',
             'accountNumber' => 'required|digits:10',
         ]);
         $price = 10;
-        if($price > $user->balance){
+        if ($price > $user->balance) {
             return response()->json([
                 'status' => 'error',
-                'message' => "Insufficient Balance to validate BVN Details. Please fund your Wallet and try again. User Profile Fetched Successful",
+                'message' => 'Insufficient Balance to validate BVN Details. Please fund your Wallet and try again. User Profile Fetched Successful',
             ]);
         }
         $user->balance = $user->balance - $price;
         $user->bvn = $request->bvn;
-        $user->verify_method = "bvn";
+        $user->verify_method = 'bvn';
         $user->save();
         // send request to monnify
         $verify = $monnify->verifyBvnAcc($request->all());
         $lm = json_encode($verify, JSON_PRETTY_PRINT);
-        if(isset($verify['responseMessage']) && $verify['responseMessage'] == "success"){
-            $trans = new Transaction();
+        if (isset($verify['responseMessage']) && $verify['responseMessage'] == 'success') {
+            $trans = new Transaction;
             $trans->user_id = $user->id;
             $trans->type = 1; // 1- credit, 2- deit, 3-others
             $trans->code = getTrx(14);
-            $trans->message = "BVN Verification fee";
+            $trans->message = 'BVN Verification fee';
             $trans->amount = $price;
             $trans->status = 1;
             $trans->charge = 0;
-            $trans->service = "kyc"; // bills
+            $trans->service = 'kyc'; // bills
             $trans->old_balance = $user->balance - $price;
             $trans->new_balance = $user->balance;
             $trans->save();
             $mp = $verify['responseBody']['matchPercentage'];
-            if(!$mp){
+            if (! $mp) {
                 // refund user
                 $user->balance += $price;
                 $user->save();
                 $trans->delete();
                 $sts = 'error';
-                $msg = "Unable to validate BVN. Please try again";
+                $msg = 'Unable to validate BVN. Please try again';
             }
-            if($mp >= 50){
+            if ($mp >= 50) {
                 $user->kyc_status = 1;
                 $user->save();
-                if($user->virtual_ref){
+                if ($user->virtual_ref) {
                     $data = [
                         'bvn' => $request->bvn,
                         // 'nin' => $request->nin
@@ -216,85 +231,95 @@ class UserController extends Controller
                     $updatekyc = $monnify->updateCustomerKyc($user->virtual_ref, $data);
                     $lm = json_encode($updatekyc, JSON_PRETTY_PRINT);
                     // file_put_contents('public/test-monnify.txt', $lm, FILE_APPEND);
-                    if(isset($updatekyc['responseMessage']) && $updatekyc['responseMessage'] == "success"){
+                    if (isset($updatekyc['responseMessage']) && $updatekyc['responseMessage'] == 'success') {
                         $user->kyc_status = 1;
                         $user->save();
-                        $msg = "KYC Validated successfully";
+                        $msg = 'KYC Validated successfully';
+
                         return response()->json([
                             'status' => 'success',
-                            'message' => $msg
+                            'message' => $msg,
                         ]);
-                    }else{
+                    } else {
                         $user->kyc_status = 2;
                         $user->save();
-                        $msg = "KYC Verification not successful. Please wait and try again";
+                        $msg = 'KYC Verification not successful. Please wait and try again';
                         $sts = 'error';
                     }
                 }
 
-            }else{
+            } else {
                 // return error without refund
                 $trans->save();
-                $msg = "Unable to validate BVN. Please try again";
+                $msg = 'Unable to validate BVN. Please try again';
                 $sts = 'error';
             }
-        }else{
+        } else {
             // refund user
             $user->balance += $price;
             $user->save();
             $sts = 'error';
-            $msg = "Unable to validate BVN. Please try again";
+            $msg = 'Unable to validate BVN. Please try again';
         }
+
         return response()->json([
             'status' => $sts ?? 'error',
-            'message' => $msg
+            'message' => $msg,
         ]);
     }
+
     // Generate bank accounts
-    function generate_account(Request $request){
+    public function generate_account(Request $request)
+    {
         $user = Auth::user();
-        if(Auth::user()->virtual_ref == null){
-            $monnify = new MonnifyUtility();
+        if (Auth::user()->virtual_ref == null) {
+            $monnify = new MonnifyUtility;
             $data = [
                 'email' => $user['email'],
                 'name' => $user->name(),
-                'currency' =>get_setting('currency_code'),
-                'reference' => \getTrx(8).$user['username']
+                'currency' => get_setting('currency_code'),
+                'reference' => \getTrx(8).$user['username'],
             ];
             $response = $monnify->reserveAccount($data);
-            if($response['responseMessage'] == 'success'){
+            if ($response['responseMessage'] == 'success') {
                 $banks = $response['responseBody']['accounts'];
                 $user->virtual_ref = $data['reference'];
                 $user->virtual_banks = $banks;
                 $user->save();
-            }else{
+            } else {
                 return response()->json([
                     'status' => 'error',
-                    'message' =>"Virtual Accounts not created! Please try again",
-                ],400);
+                    'message' => 'Virtual Accounts not created! Please try again',
+                ], 400);
             }
 
         }
+
         return response()->json([
             'status' => 'success',
-            'message' => "Accounts Generated Successfully",
+            'message' => 'Accounts Generated Successfully',
             'data' => json_decode($user->virtual_banks),
-        ],200);
+        ], 200);
 
     }
+
     // Logout
-    function logout(){
+    public function logout()
+    {
         Auth::user()->tokens()->delete();
+
         return response()->json([
-            'status' => "success",
+            'status' => 'success',
             'message' => 'Successfully logged out',
         ]);
     }
+
     // Transactions
-    function transactions(Request $request){
+    public function transactions(Request $request)
+    {
 
         $query = Transaction::whereUserId(auth()->id())->orderByDesc('id');
-        if($request->has('search') ){
+        if ($request->has('search')) {
             $query = Transaction::whereUserId(auth()->id())->search($request->search)->orderByDesc('id');
         }
         $pp = 10;
@@ -305,8 +330,8 @@ class UserController extends Controller
 
         return [
 
-            'status' => "success" ,
-            'message' => "Transactions fetched successfully",
+            'status' => 'success',
+            'message' => 'Transactions fetched successfully',
             'data' => $result->items(),
             'total' => $result->total(),
             'current_page' => $result->currentPage(),
@@ -315,27 +340,29 @@ class UserController extends Controller
             'last_page' => $result->lastPage(),
         ];
     }
-    //Make Deposit
-    function makeDeposit(Request $request){
+
+    // Make Deposit
+    public function makeDeposit(Request $request)
+    {
         $req = Purify::clean($request->all());
         $validator = Validator::make($req, [
             'amount' => 'required|numeric|min:'.sys_setting('min_deposit'),
             'method' => 'required|in:flutterwave,coinbase,perfect,binance',
         ]);
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()->first(),
-                'error' => $validator->errors()->all()
-            ],422);
+                'error' => $validator->errors()->all(),
+            ], 422);
         }
         $user = Auth::user();
-        if($request->method == "bank"){
+        if ($request->method == 'bank') {
             $charge = sys_setting('bank_fee');
-        }else{
-            $charge = (sys_setting('deposit_fee')* $request->amount )/100;
+        } else {
+            $charge = (sys_setting('deposit_fee') * $request->amount) / 100;
         }
-        $deposit = new Deposit();
+        $deposit = new Deposit;
         $deposit->user_id = $user->id;
         $deposit->type = 'card'; // 1- event, 2- form, 3-vote
         $deposit->code = getTrx();
@@ -348,8 +375,8 @@ class UserController extends Controller
         $deposit->save();
         // payment details
         $details['amount'] = $deposit->amount;
-        $details['final'] =  $charge + $deposit->amount;
-        $details['final2'] =  round($details['final'] / get_setting('currency_rate'), 2);
+        $details['final'] = $charge + $deposit->amount;
+        $details['final2'] = round($details['final'] / get_setting('currency_rate'), 2);
         $details['name'] = $user->name();
         $details['user_id'] = $user->id;
         $details['deposit_id'] = $deposit->id;
@@ -361,27 +388,30 @@ class UserController extends Controller
 
         // redirect to payment gateway
         $c = new PaymentController;
-        if($request->method == "flutterwave"){
+        if ($request->method == 'flutterwave') {
             return $data = $c->initFlutterApi($details);
-        }elseif($request->method == "perfect"){
+        } elseif ($request->method == 'perfect') {
             return $data = $c->initPerfectMoneyApi($details);
-        }elseif($request->method == "coinbase"){
+        } elseif ($request->method == 'coinbase') {
             return $data = $c->initCoinbaseApi($details);
-        }elseif($request->method == "binance"){
+        } elseif ($request->method == 'binance') {
             return $data = $c->initBinanceApi($details);
         }
 
         $deposit->delete();
+
         return response()->json([
             'status' => 'error',
-            'message' => "Payment was not successful. Please try again",
+            'message' => 'Payment was not successful. Please try again',
         ]);
     }
+
     // Deposits
-    function deposits(Request $request){
+    public function deposits(Request $request)
+    {
 
         $query = Deposit::whereUserId(auth()->id())->orderByDesc('id')->whereStatus(1);
-        if($request->has('search') ){
+        if ($request->has('search')) {
             $query = Deposit::whereUserId(auth()->id())->search($request->search)->orderByDesc('id');
         }
         $pp = 10;
@@ -392,8 +422,8 @@ class UserController extends Controller
 
         return [
 
-            'status' => "success" ,
-            'message' => "Deposits fetched successfully",
+            'status' => 'success',
+            'message' => 'Deposits fetched successfully',
             'data' => $result->items(),
             'total' => $result->total(),
             'current_page' => $result->currentPage(),
@@ -402,10 +432,12 @@ class UserController extends Controller
             'last_page' => $result->lastPage(),
         ];
     }
+
     // Referrals
-    function referrals(Request $request){
+    public function referrals(Request $request)
+    {
         $query = User::whereRefId(auth()->id())->orderByDesc('id')->whereStatus(1);
-        if($request->has('search') ){
+        if ($request->has('search')) {
             $query = User::whereRefId(auth()->id())->searchUser($request->search)->orderByDesc('id');
         }
         $pp = 20;
@@ -416,8 +448,8 @@ class UserController extends Controller
 
         return [
 
-            'status' => "success" ,
-            'message' => "Referral fetched successfully",
+            'status' => 'success',
+            'message' => 'Referral fetched successfully',
             'data' => $result->items(),
             'total' => $result->total(),
             'current_page' => $result->currentPage(),

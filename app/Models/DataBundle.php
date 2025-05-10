@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class DataBundle extends Model
 {
     use HasFactory, SoftDeletes;
+
     public function network()
     {
         return $this->belongsTo(Network::class);

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\TicketComment;
 use Auth;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -14,7 +14,7 @@ class SupportController extends Controller
     // user tickets
     public function user_tickets($slug = null)
     {
-        if($slug){
+        if ($slug) {
             return $this->ticket_detail($slug);
         }
         // $tickets = Auth::user()->tickets()->orderByDesc('status')->limit(100)->get();
@@ -29,7 +29,7 @@ class SupportController extends Controller
     }
 
     // create ticket
-    function create_ticket(Request $request)
+    public function create_ticket(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'subject' => 'required|string',
@@ -44,7 +44,6 @@ class SupportController extends Controller
             ], 422);
         }
 
-
         $ticket = Auth::user()->tickets()->save(new SupportTicket([
             'ticket' => getTrx(10),
             'status' => 2,
@@ -54,25 +53,27 @@ class SupportController extends Controller
         $ticket->comments()->save(new TicketComment([
             'comment' => $request->message,
         ]));
+
         // Send EMail?
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket created successfully',
             'data' => $ticket,
-        ],201);
+        ], 201);
     }
 
     // ticket detail
-    function ticket_detail($slug)
+    public function ticket_detail($slug)
     {
         $ticket = Auth::user()->tickets()->with(['comments'])->whereTicket($slug)->first();
 
-        if(!$ticket){
+        if (! $ticket) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Ticket Not Found'
-            ],404);
+                'message' => 'Ticket Not Found',
+            ], 404);
         }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket detail fetched successfully',
@@ -95,16 +96,15 @@ class SupportController extends Controller
             ], 422);
         }
 
-
         $ticket = SupportTicket::findOrFail($id);
 
         $ticket->comments()->save(new TicketComment([
             'comment' => $request->comment,
-            'type' => 0
+            'type' => 0,
         ]));
 
         $ticket->update([
-            'status' => 2
+            'status' => 2,
         ]);
 
         // send email
@@ -114,11 +114,10 @@ class SupportController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket comment sent successfully',
-            "data" => [
+            'data' => [
                 'comment' => $request->comment,
-                'ticket' => $ticket
-            ]
-        ],201);
+                'ticket' => $ticket,
+            ],
+        ], 201);
     }
-
 }

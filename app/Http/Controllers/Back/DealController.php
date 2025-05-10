@@ -10,39 +10,52 @@ use Str;
 
 class DealController extends Controller
 {
-    function index(Request $request){
+    public function index(Request $request)
+    {
         $listings = Listing::orderByDesc('created_at')->get();
-        $title = "All Listings";
+        $title = 'All Listings';
         $type = 'all';
-        return view('admin.deals.index', compact('listings','title','type'));
+
+        return view('admin.deals.index', compact('listings', 'title', 'type'));
     }
 
-    function pending(Request $request){
-        $listings = Listing::where('status', '!=',1)->orderByDesc('created_at')->get();
-        $title = "Pending Listings";
+    public function pending(Request $request)
+    {
+        $listings = Listing::where('status', '!=', 1)->orderByDesc('created_at')->get();
+        $title = 'Pending Listings';
         $type = 'pending';
-        return view('admin.deals.index', compact('listings','title','type'));
-    }
-    function sold(Request $request){
-        $listings = Listing::where('sold', 1)->orderByDesc('id')->get();
-        $title = "Sold Listings";
-        $type = 'sold';
-        return view('admin.deals.index', compact('listings','title','type'));
+
+        return view('admin.deals.index', compact('listings', 'title', 'type'));
     }
 
-    function details($id){
+    public function sold(Request $request)
+    {
+        $listings = Listing::where('sold', 1)->orderByDesc('id')->get();
+        $title = 'Sold Listings';
+        $type = 'sold';
+
+        return view('admin.deals.index', compact('listings', 'title', 'type'));
+    }
+
+    public function details($id)
+    {
         $listing = Listing::findOrFail($id);
         $title = "View {$listing->name}";
         $trx = $listing->transaction;
-        return view('admin.deals.details', compact('title','listing','trx'));
+
+        return view('admin.deals.details', compact('title', 'listing', 'trx'));
     }
 
-    function edit($id){
+    public function edit($id)
+    {
         $listing = Listing::findOrFail($id);
         $title = "Edit {$listing->name}";
-        return view('admin.deals.edit', compact('title','listing'));
+
+        return view('admin.deals.edit', compact('title', 'listing'));
     }
-    function approve($id){
+
+    public function approve($id)
+    {
         $listing = Listing::findOrFail($id);
         $listing->status = 1;
         $listing->save();
@@ -50,7 +63,8 @@ class DealController extends Controller
         return back()->withSuccess('Listing Published successfully');
     }
 
-    function update($id, Request $request){
+    public function update($id, Request $request)
+    {
         // validate request
         $req = $this->validate($request, [
             'name' => 'required|string|max:255',
@@ -66,27 +80,28 @@ class DealController extends Controller
             'mobile' => 'required|string|min:8',
             'other_info' => 'nullable|string',
             'preview' => 'nullable|image|max:4048',
-            'status' => 'numeric|required'
+            'status' => 'numeric|required',
         ]);
         $input = Purify::clean($req);
         $listing = Listing::findOrfail($id);
         // upload image
-        if ($request->hasFile('preview')){
+        if ($request->hasFile('preview')) {
             $image = $request->file('preview');
             $imageName = 'listings-'.Str::random(15).'.'.$image->getClientOriginalExtension();
-            //delete old image?
-            if($listing->preview != null){
+            // delete old image?
+            if ($listing->preview != null) {
                 try {
                     unlink(public_path('uploads/'.$listing->preview));
                 } catch (\Throwable $th) {
-                    //throw $th;
+                    // throw $th;
                 }
             }
-            $image->move(public_path('uploads/listings'),$imageName);
-            $input['preview'] = "listings/".$imageName;
+            $image->move(public_path('uploads/listings'), $imageName);
+            $input['preview'] = 'listings/'.$imageName;
         }
         $input['amount'] = $request->price;
         $data = $listing->update($input);
+
         return back()->withSuccess('Listings updated successfully');
     }
 }

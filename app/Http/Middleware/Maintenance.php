@@ -15,9 +15,10 @@ class Maintenance
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(sys_setting('is_maintenance') == 1){
+        if (sys_setting('is_maintenance') == 1) {
             return to_route('maintenance');
         }
+
         return $next($request);
     }
 }

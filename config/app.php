@@ -70,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => env('TIME_ZONE', "Africa/Lagos"),
+    'timezone' => env('TIME_ZONE', 'Africa/Lagos'),
 
     /*
     |--------------------------------------------------------------------------

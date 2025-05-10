@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Setting extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'title',
-        'email','name','about',
+        'email', 'name', 'about',
         'description',
         'address',
         'phone',
@@ -22,11 +23,11 @@ class Setting extends Model
         'whatsapp',
         'instagram', 'telegram',
         'primary_color',
-        'sec_color', 'currency','currency_rate',
+        'sec_color', 'currency', 'currency_rate',
         'currency_code',
         'custom_js',
         'custom_css',
         'is_adsense',
-        'meta_keywords','is_announcement','announcement','page_title','page_body'
+        'meta_keywords', 'is_announcement', 'announcement', 'page_title', 'page_body',
     ];
 }

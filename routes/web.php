@@ -1,16 +1,14 @@
 <?php
 
-use App\Http\Controllers\{
-    BillsController,
-    DealController,
-    HomeController,
-    OrderController,
-    PaymentController,
-    SupportController,
-    UserController
-};
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Back\AdminController;
+use App\Http\Controllers\BillsController;
+use App\Http\Controllers\DealController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SupportController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,17 +39,17 @@ Route::get('admin-panel-login/{code}', [AdminController::class, 'loginFromPanel'
 
 Route::get('/maintenance', [App\Http\Controllers\HomeController::class, 'maintenance'])->name('maintenance');
 // Maintenence mode
-Route::middleware('maintenance')->group(function(){
+Route::middleware('maintenance')->group(function () {
 
     Route::get('login', [App\Http\Controllers\Auth\LoginController::class, 'user_login'])->name('login');
-    Route::prefix('auth')->group(function(){
+    Route::prefix('auth')->group(function () {
         Auth::routes(['verify' => true]);
     });
-    Route::get('auth/login',[App\Http\Controllers\Auth\LoginController::class, 'user_login']);
+    Route::get('auth/login', [App\Http\Controllers\Auth\LoginController::class, 'user_login']);
 
     Route::post('/auth/login', [App\Http\Controllers\Auth\LoginController::class, 'submit_login'])->name('signin');
     // Register
-    Route::controller(RegisterController::class)->middleware('reseller')->group(function(){
+    Route::controller(RegisterController::class)->middleware('reseller')->group(function () {
         Route::get('/signup', 'user_signup')->name('signup');
         Route::get('auth/register', 'user_signup')->name('register');
         Route::post('/signup', 'register')->name('signup');
@@ -59,7 +57,7 @@ Route::middleware('maintenance')->group(function(){
 
     Route::post('/currency-change', [App\Http\Controllers\CurrencyController::class, 'currency_change'])->name('currency');
 
-    Route::controller(HomeController::class)->middleware('reseller')->group(function(){
+    Route::controller(HomeController::class)->middleware('reseller')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/home', 'index')->name('home');
         Route::get('/logout', 'logout')->name('logout');
@@ -72,14 +70,14 @@ Route::middleware('maintenance')->group(function(){
         Route::get('/refund-trx', 'debitUser')->name('refund');
     });
 
-    Route::middleware('user','verified','reseller')->prefix('user')->as('user.')->group(function(){
-        Route::controller(UserController::class)->group(function(){
+    Route::middleware('user', 'verified', 'reseller')->prefix('user')->as('user.')->group(function () {
+        Route::controller(UserController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/dashboard', 'index')->name('dashboard');
             Route::get('/profile', 'profile')->name('profile');
             Route::post('/profile', 'update_profile')->name('profile');
-            Route::get('generate-apikey','generate_apikey')->name('apikey');
-            Route::post('password','update_password')->name('password');
+            Route::get('generate-apikey', 'generate_apikey')->name('apikey');
+            Route::post('password', 'update_password')->name('password');
             Route::get('/logout', 'logout')->name('logout');
             Route::get('/close-message', 'close_message')->name('close-message');
             Route::post('/verify-kyc', 'verify_kyc')->name('verify-kyc');
@@ -102,7 +100,7 @@ Route::middleware('maintenance')->group(function(){
             Route::post('/delete-account', 'deleteAccount')->name('delete-account');
         });
         // Orders
-        Route::controller(OrderController::class)->prefix('orders')->as('orders.')->group(function(){
+        Route::controller(OrderController::class)->prefix('orders')->as('orders.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/create', 'create')->name('create');
             Route::get('/pending', 'pending')->name('pending');
@@ -113,13 +111,12 @@ Route::middleware('maintenance')->group(function(){
             Route::get('/canceled', 'canceled')->name('canceled');
             Route::post('/', 'place_order')->name('store');
 
-
             // Ajax requests
             Route::get('/get-services', 'get_services')->name('get-services');
             Route::get('/service-form', 'show_service_form')->name('service-form');
         });
         // support system
-        Route::controller(SupportController::class)->prefix('tickets')->group(function(){
+        Route::controller(SupportController::class)->prefix('tickets')->group(function () {
             Route::get('/', 'user_tickets')->name('tickets');
             Route::post('/create', 'create_ticket')->name('ticket.create');
             Route::get('/viewticket/{slug}', 'ticket_detail')->name('ticket.detail');
@@ -127,7 +124,7 @@ Route::middleware('maintenance')->group(function(){
             Route::post('/close/{id}', 'close_ticket')->name('ticket.close');
         });
         // Bills Payment
-        Route::controller(BillsController::class)->prefix('bills')->as('bills.')->group(function(){
+        Route::controller(BillsController::class)->prefix('bills')->as('bills.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/airtime', 'airtime')->name('airtime');
             Route::post('/airtime', 'buy_airtime')->name('airtime');
@@ -150,7 +147,7 @@ Route::middleware('maintenance')->group(function(){
             Route::post('/bet/validation', 'bet_validation')->name('bet.validation');
         });
         // listings
-        Route::controller(DealController::class)->prefix('listings')->as('listings.')->group(function(){
+        Route::controller(DealController::class)->prefix('listings')->as('listings.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/product/{slug}', 'view')->name('view');
             Route::get('/add', 'add')->name('add');
@@ -182,12 +179,12 @@ Route::middleware('maintenance')->group(function(){
 });
 
 // Payment Page
-Route::controller(HomeController::class)->group(function(){
+Route::controller(HomeController::class)->group(function () {
     Route::get('/payment-error', 'paymentError')->name('pay.error');
     Route::get('/payment-success', 'paymentSuccess')->name('pay.success');
 });
 // Payment routes
-Route::controller(PaymentController::class)->group(function(){
+Route::controller(PaymentController::class)->group(function () {
     Route::any('/paystack/success/', 'paystack_success')->name('paystack.success');
     Route::any('/flutter/success/', 'flutter_success')->name('flutter.success');
     Route::any('/monnify/success/', 'monnify_success')->name('monnify.success');
@@ -199,5 +196,5 @@ Route::controller(PaymentController::class)->group(function(){
     Route::any('/monnify/success/listings', 'listing_monnify_success')->name('monnify.success.listing');
 });
 // Monify webhook
-Route::any('/webhook/monnify-transactions' , [App\Http\Controllers\PaymentController::class, 'monnify_webhook'])->name('monnify.webhook');
-//API Payment IPN
+Route::any('/webhook/monnify-transactions', [App\Http\Controllers\PaymentController::class, 'monnify_webhook'])->name('monnify.webhook');
+// API Payment IPN

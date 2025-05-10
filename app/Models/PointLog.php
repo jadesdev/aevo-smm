@@ -13,5 +13,4 @@ class PointLog extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 }

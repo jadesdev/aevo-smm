@@ -14,29 +14,32 @@ class ListingOffer extends Model
     ];
 
     public function seller()
-	{
-		return $this->belongsTo(User::class, 'seller_id');
-	}
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
     public function user()
-	{
-		return $this->belongsTo(User::class);
-	}
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function buyer()
-	{
-		return $this->belongsTo(User::class);
-	}
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function listing()
-	{
-		return $this->belongsTo(Listing::class);
-	}
+    {
+        return $this->belongsTo(Listing::class);
+    }
 
     public function comments()
-	{
-		return $this->hasMany(ListingComment::class, 'offer_id');
-	}
+    {
+        return $this->hasMany(ListingComment::class, 'offer_id');
+    }
 
     public function transaction()
-	{
-		return $this->hasOne(ListTrx::class, 'offer_id');
-	}
+    {
+        return $this->hasOne(ListTrx::class, 'offer_id');
+    }
 }

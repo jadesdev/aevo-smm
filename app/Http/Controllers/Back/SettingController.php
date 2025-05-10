@@ -16,60 +16,66 @@ class SettingController extends Controller
     {
         return view('admin.setup.index');
     }
+
     public function payment()
     {
         return view('admin.setup.payment');
     }
+
     public function features()
     {
         return view('admin.setup.features');
     }
+
     public function email()
     {
         return view('admin.setup.email');
     }
+
     public function custom_styles()
     {
         return view('admin.setup.custom');
     }
 
-    function update(Request $request){
+    public function update(Request $request)
+    {
         $input = $request->all();
-        if($request->hasFile('favicon')){
+        if ($request->hasFile('favicon')) {
             $image = $request->file('favicon');
             $imageName = Str::random(10).'favicon.png';
-            $image->move(public_path('uploads'),$imageName);
-            $input['favicon'] =$imageName;
+            $image->move(public_path('uploads'), $imageName);
+            $input['favicon'] = $imageName;
         }
-        if($request->hasFile('logo')){
+        if ($request->hasFile('logo')) {
             $image = $request->file('logo');
             $imageName = Str::random(10).'logo.png';
-            $image->move(public_path('uploads'),$imageName);
-            $input['logo'] =$imageName;
+            $image->move(public_path('uploads'), $imageName);
+            $input['logo'] = $imageName;
         }
 
         $setting = Setting::first();
         $setting->update($input);
 
-        return redirect()->back()->with('success',__('Settings Updated Successfully.'));
+        return redirect()->back()->with('success', __('Settings Updated Successfully.'));
     }
+
     public function envkeyUpdate(Request $request)
     {
         foreach ($request->types as $key => $type) {
             $this->overWriteEnvFile($type, $request[$type]);
         }
-        return back()->withSuccess("Settings updated successfully");
+
+        return back()->withSuccess('Settings updated successfully');
 
     }
 
-    function systemUpdate(Request $request)
+    public function systemUpdate(Request $request)
     {
         $setting = SystemSetting::where('name', $request->name)->first();
-        if($setting !=null){
+        if ($setting != null) {
             $setting->value = $request->value;
             $setting->save();
-        }
-        else{
+        } else {
             $setting = new SystemSetting;
             $setting->name = $request->name;
             $setting->value = $request->value;
@@ -83,28 +89,24 @@ class SettingController extends Controller
     {
         // return $request;
         foreach ($request->types as $key => $type) {
-            if($type == 'site_name'){
+            if ($type == 'site_name') {
                 $this->overWriteEnvFile('APP_NAME', $request[$type]);
-            }
-            else {
+            } else {
                 $sys_settings = SystemSetting::where('name', $type)->first();
 
-                if($sys_settings!=null){
-                    if(gettype($request[$type]) == 'array'){
+                if ($sys_settings != null) {
+                    if (gettype($request[$type]) == 'array') {
                         $sys_settings->value = json_encode($request[$type]);
-                    }
-                    else {
+                    } else {
                         $sys_settings->value = $request[$type];
                     }
                     $sys_settings->save();
-                }
-                else{
-                    $sys_settings = new SystemSetting();
+                } else {
+                    $sys_settings = new SystemSetting;
                     $sys_settings->name = $type;
-                    if(gettype($request[$type]) == 'array'){
+                    if (gettype($request[$type]) == 'array') {
                         $sys_settings->value = json_encode($request[$type]);
-                    }
-                    else {
+                    } else {
                         $sys_settings->value = $request[$type];
                     }
                     $sys_settings->save();
@@ -117,17 +119,17 @@ class SettingController extends Controller
 
         return redirect()->back()->withSuccess(__('Settings Updated Successfully.'));
     }
+
     public function overWriteEnvFile($type, $val)
     {
         $path = base_path('.env');
         if (file_exists($path)) {
             $val = '"'.trim($val).'"';
-            if(is_numeric(strpos(file_get_contents($path), $type)) && strpos(file_get_contents($path), $type) >= 0){
+            if (is_numeric(strpos(file_get_contents($path), $type)) && strpos(file_get_contents($path), $type) >= 0) {
                 file_put_contents($path, str_replace(
                     $type.'="'.env($type).'"', $type.'='.$val, file_get_contents($path)
                 ));
-            }
-            else{
+            } else {
                 file_put_contents($path, file_get_contents($path)."\r\n".$type.'='.$val);
             }
         }
@@ -137,19 +139,22 @@ class SettingController extends Controller
     public function news_setting()
     {
         $data = Update::orderByDesc('id')->get();
+
         return view('admin.setup.news', compact('data'));
     }
-    function news_setting_create(Request $request)
+
+    public function news_setting_create(Request $request)
     {
         // return $request;
-        $data = new Update();
+        $data = new Update;
         $data->title = $request->title;
         $data->message = $request->message;
         $data->save();
 
-        return redirect()->back()->with('success',__('News update created Successfully.'));
+        return redirect()->back()->with('success', __('News update created Successfully.'));
     }
-    function news_setting_update(Request $request, $id)
+
+    public function news_setting_update(Request $request, $id)
     {
         // return $request;
         $data = Update::findOrFail($id);
@@ -157,14 +162,15 @@ class SettingController extends Controller
         $data->message = $request->message;
         $data->save();
 
-        return redirect()->back()->with('success',__('News updated Successfully.'));
+        return redirect()->back()->with('success', __('News updated Successfully.'));
     }
-     function news_setting_delete($id)
+
+    public function news_setting_delete($id)
     {
         // return $request;
         $data = Update::findOrFail($id);
         $data->delete();
 
-        return redirect()->back()->with('success',__('News deleted Successfully.'));
+        return redirect()->back()->with('success', __('News deleted Successfully.'));
     }
 }

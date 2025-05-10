@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentBonus extends Model
 {
     protected $fillable = [
-        'method','amount','status','percentage',
+        'method', 'amount', 'status', 'percentage',
     ];
+
     use HasFactory;
 }

@@ -20,7 +20,6 @@ class ForgotPasswordController extends Controller
 
     use SendsPasswordResetEmails;
 
-
     /**
      * Display the form to request a password reset link.
      *
@@ -28,15 +27,15 @@ class ForgotPasswordController extends Controller
      */
     public function showLinkRequestForm()
     {
-        if(sys_setting('homepage_theme') == "theme1") {
+        if (sys_setting('homepage_theme') == 'theme1') {
             return view('auth.passwords.email');
-        }elseif(sys_setting('homepage_theme') == "theme2") {
+        } elseif (sys_setting('homepage_theme') == 'theme2') {
             return view('front2.auth.password');
-        }elseif(sys_setting('homepage_theme') == "theme3") {
+        } elseif (sys_setting('homepage_theme') == 'theme3') {
             return view('front3.auth.password');
-        }elseif(sys_setting('homepage_theme') == "theme4") {
+        } elseif (sys_setting('homepage_theme') == 'theme4') {
             return view('front4.auth.password');
-        }else{
+        } else {
             return view('auth.passwords.email');
         }
     }

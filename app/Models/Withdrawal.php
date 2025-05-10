@@ -14,7 +14,8 @@ class Withdrawal extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function transaction() {
-        return $this->belongsTo(Transaction::class, 'code','code');
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class, 'code', 'code');
     }
 }

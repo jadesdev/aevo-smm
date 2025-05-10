@@ -10,15 +10,14 @@ use Illuminate\Validation\ValidationException;
 
 class ResetPasswordController extends Controller
 {
-
-    function reset_password(Request $request){
+    public function reset_password(Request $request)
+    {
         return $this->sendResetLinkEmail($request);
     }
 
     /**
      * Send a reset link to the given user.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function sendResetLinkEmail(Request $request)
@@ -40,7 +39,6 @@ class ResetPasswordController extends Controller
     /**
      * Validate the email for the given request.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return void
      */
     protected function validateEmail(Request $request)
@@ -51,7 +49,6 @@ class ResetPasswordController extends Controller
     /**
      * Get the needed authentication credentials from the request.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     protected function credentials(Request $request)
@@ -62,21 +59,19 @@ class ResetPasswordController extends Controller
     /**
      * Get the response for a successful password reset link.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  string  $response
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     protected function sendResetLinkResponse(Request $request, $response)
     {
         return $request->wantsJson()
-                    ? new JsonResponse(['status' => "success",'message' => trans($response)], 200)
+                    ? new JsonResponse(['status' => 'success', 'message' => trans($response)], 200)
                     : back()->with('status', trans($response));
     }
 
     /**
      * Get the response for a failed password reset link.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  string  $response
      * @return \Illuminate\Http\RedirectResponse
      *
@@ -91,8 +86,8 @@ class ResetPasswordController extends Controller
         }
 
         return back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => trans($response)]);
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => trans($response)]);
     }
 
     /**

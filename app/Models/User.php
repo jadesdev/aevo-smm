@@ -19,7 +19,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
-        'email', 'username'
+        'email', 'username',
     ];
 
     /**
@@ -30,10 +30,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
-        "blocked",
-        "verify_code",
-        "email_verify",
-        "sms_verify",'name','fname','lname','updated_at','created_at',
+        'blocked',
+        'verify_code',
+        'email_verify',
+        'sms_verify', 'name', 'fname', 'lname', 'updated_at', 'created_at',
     ];
 
     /**
@@ -46,28 +46,33 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
-    protected $appends = ['fullname',];
+    protected $appends = ['fullname'];
 
     public function referrals()
     {
         return $this->hasMany(User::class, 'ref_id')->where('ref_id', $this->id);
     }
 
-    public function getFullnameAttribute(){
-        return $this->fname. ' '. $this->lname;
+    public function getFullnameAttribute()
+    {
+        return $this->fname.' '.$this->lname;
     }
 
-    public function name(){
-        return $this->fname. ' '. $this->lname;
+    public function name()
+    {
+        return $this->fname.' '.$this->lname;
     }
+
     public function refer()
     {
         return $this->belongsTo(User::class, 'ref_id');
     }
+
     public function ticket_comments()
     {
         return $this->hasMany(TicketComment::class);
     }
+
     public function tickets()
     {
         return $this->hasMany(SupportTicket::class);
@@ -77,28 +82,28 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Deposit::class);
     }
+
     public function transactions()
-   {
-       return $this->hasMany(Transaction::class)->orderByDesc('id');
-   }
+    {
+        return $this->hasMany(Transaction::class)->orderByDesc('id');
+    }
 
-   public function orders()
-   {
-       return $this->hasMany(Order::class)->orderByDesc('id');
-   }
+    public function orders()
+    {
+        return $this->hasMany(Order::class)->orderByDesc('id');
+    }
 
+    public function listings()
+    {
+        return $this->hasMany(Listing::class)->orderByDesc('id');
+    }
 
-   public function listings()
-   {
-       return $this->hasMany(Listing::class)->orderByDesc('id');
-   }
+    public function pointLogs()
+    {
+        return $this->hasMany(PointLog::class)->orderByDesc('id');
+    }
 
-   public function pointLogs()
-   {
-       return $this->hasMany(PointLog::class)->orderByDesc('id');
-   }
-
-   public function scopeSearchUser($query, $search)
+    public function scopeSearchUser($query, $search)
     {
         return $query->where(function ($query) use ($search) {
             $query->where('name', 'like', "%$search%")
@@ -112,5 +117,4 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->orWhere('address', 'like', "%$search%");
         });
     }
-
 }

@@ -3,24 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{
-    Setting,
-    SystemSetting
-};
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
-    function settings(Request $request){
+    public function settings(Request $request)
+    {
         $sett = Setting::first();
-        $bills =[
+        $bills = [
             'status' => sys_setting('bills_payment'),
             'airtime' => sys_setting('is_airtime'),
             'data' => sys_setting('is_data'),
             'power' => sys_setting('is_power'),
             'cable' => sys_setting('is_cable'),
         ];
-        $payment =[
+        $payment = [
             'monnify' => sys_setting('monnify_payment'),
             'paypal' => sys_setting('paypal_payment'),
             'perfect_money' => sys_setting('perfect_payment'),
@@ -44,12 +42,13 @@ class SettingController extends Controller
             'is_welcome_message' => sys_setting('is_welcome_message'),
             'welcome_message' => sys_setting('welcome_message'),
             'bills' => $bills,
-            'payment' => $payment
+            'payment' => $payment,
         ];
+
         return response()->json([
-            'status' => "success",
+            'status' => 'success',
             'message' => 'Site Settings fetched successfully',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 }

@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
 Route::post('v1', [ApiController::class, 'process'])->name('api.v1');
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

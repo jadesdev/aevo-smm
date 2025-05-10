@@ -3,29 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendMailJob;
-use App\Mail\Sendmail;
 use App\Models\Newsletter;
-use App\Models\User;
-use Artisan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Mail;
 
 class EmailController extends Controller
 {
-
     // Newsletter
-    function newsletter(){
+    public function newsletter()
+    {
         $nls = Newsletter::orderByDesc('id')->get();
+
         return view('admin.newsletter.index', compact('nls'));
     }
-    function add_newsletter(){
+
+    public function add_newsletter()
+    {
         return view('admin.newsletter.add');
     }
 
-    function send_newsletter(Request $request){
+    public function send_newsletter(Request $request)
+    {
         // save to db
-        $nl = new Newsletter();
+        $nl = new Newsletter;
         $nl->user_emails = $request->user_emails ?? 0;
         $nl->other_emails = $request->other_emails;
         $nl->subject = $request->subject;
@@ -36,13 +36,16 @@ class EmailController extends Controller
 
         return to_route('admin.newsletter')->withSuccess('Email Scheduled Successfully');
     }
-    function edit_newsletter($id){
+
+    public function edit_newsletter($id)
+    {
         $nl = Newsletter::findOrFail($id);
 
         return view('admin.newsletter.view', compact('nl'));
     }
 
-    function update_newsletter(Request $request, $id){
+    public function update_newsletter(Request $request, $id)
+    {
         // save to db
         $nl = Newsletter::findOrFail($id);
         $nl->user_emails = $request->user_emails ?? 0;
@@ -56,18 +59,21 @@ class EmailController extends Controller
         return to_route('admin.newsletter')->withSuccess('Email Updated Successfully');
     }
 
-    function delete_newsletter($id){
+    public function delete_newsletter($id)
+    {
         $nl = Newsletter::findOrFail($id);
         $nl->delete();
+
         return back()->withSuccess('Newsletter Deleted Successfully');
     }
 
-    function queue_emails(){
+    public function queue_emails()
+    {
 
         $currentDateTime = Carbon::now(); // Get the current date and time
         $newsletters = Newsletter::where('status', 2)
-        ->where('date', '<=', $currentDateTime)
-        ->get();
+            ->where('date', '<=', $currentDateTime)
+            ->get();
 
         foreach ($newsletters as $newsletter) {
             $delayMinutes = rand(1, 5);
@@ -86,5 +92,4 @@ class EmailController extends Controller
             }
         }
     }
-
 }

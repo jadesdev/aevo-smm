@@ -5,33 +5,32 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Faq;
 use App\Models\GeneralUser;
-use App\Models\Transaction;
 use App\Models\User;
-use Carbon\Carbon;
 use Hash;
 use Illuminate\Http\Request;
 use Str;
 
 class HomeController extends Controller
 {
-    protected $theme ;
+    protected $theme;
+
     public function __construct()
     {
         switch (sys_setting('homepage_theme')) {
-            case "theme1":
-                $this->theme = "front.";
+            case 'theme1':
+                $this->theme = 'front.';
                 break;
-            case "theme2":
-                $this->theme = "front2.";
+            case 'theme2':
+                $this->theme = 'front2.';
                 break;
-            case "theme3":
-                $this->theme = "front3.";
+            case 'theme3':
+                $this->theme = 'front3.';
                 break;
-            case "theme4":
-                $this->theme = "front4.";
+            case 'theme4':
+                $this->theme = 'front4.';
                 break;
             default:
-                $this->theme = "front.";
+                $this->theme = 'front.';
         }
 
     }
@@ -44,17 +43,18 @@ class HomeController extends Controller
     public function index()
     {
         $faqs = Faq::whereStatus(1)->get();
+
         return view($this->theme.'index', compact('faqs'));
     }
 
     public function services(Request $request)
     {
-        $categoriz = Category::has('services')->whereStatus(1)->orderBy('name','asc')->get();
-        $categories = Category::has('services')->whereStatus(1)->orderBy('name','asc')->paginate(100);
-        if($request->has('category')){
-            $categories = Category::has('services')->whereStatus(1)->orderBy('name','asc')->whereId($request->category)->get();
-            if($request->category == ""){
-                $categories = Category::has('services')->whereStatus(1)->orderBy('name','asc')->get();
+        $categoriz = Category::has('services')->whereStatus(1)->orderBy('name', 'asc')->get();
+        $categories = Category::has('services')->whereStatus(1)->orderBy('name', 'asc')->paginate(100);
+        if ($request->has('category')) {
+            $categories = Category::has('services')->whereStatus(1)->orderBy('name', 'asc')->whereId($request->category)->get();
+            if ($request->category == '') {
+                $categories = Category::has('services')->whereStatus(1)->orderBy('name', 'asc')->get();
             }
         }
 
@@ -64,8 +64,9 @@ class HomeController extends Controller
 
         // }
 
-        return view($this->theme.'services', compact('search','categories','categoriz'));
+        return view($this->theme.'services', compact('search', 'categories', 'categoriz'));
     }
+
     public function api_docs()
     {
         return view($this->theme.'apidocs');
@@ -74,6 +75,7 @@ class HomeController extends Controller
     public function faq()
     {
         $faqs = Faq::whereStatus(1)->get();
+
         return view($this->theme.'faq', compact('faqs'));
     }
 
@@ -82,23 +84,26 @@ class HomeController extends Controller
         return view($this->theme.'terms');
     }
 
-    public function logout() {
+    public function logout()
+    {
         auth()->logout();
+
         return redirect('/');
     }
 
-    function old_user_function(Request $request){
+    public function old_user_function(Request $request)
+    {
         $oldusers = GeneralUser::all();
-        foreach($oldusers as $item){
+        foreach ($oldusers as $item) {
             // check user
             $checkuser = User::whereEmail($item['email'])->first();
-            if($checkuser){
+            if ($checkuser) {
                 continue;
             }
-            $user = new User();
+            $user = new User;
             $user->lname = $item['last_name'];
             $user->fname = $item['first_name'];
-            $user->name = $user->fname .' '. $user->lname;
+            $user->name = $user->fname.' '.$user->lname;
             $user->username = formatAndValidateUsername($item->first_name).Str::random(4);
             $user->email = $item->email;
             $user->balance = $item->balance;
@@ -115,17 +120,22 @@ class HomeController extends Controller
     }
 
     // PAYMENT PAGE
-    function paymentSuccess (){
+    public function paymentSuccess()
+    {
         return view('pay.success');
     }
-    function paymentError(){
+
+    public function paymentError()
+    {
         return view('pay.error');
     }
 
-    function maintenance(){
-        if(sys_setting('is_maintenance') != 1){
+    public function maintenance()
+    {
+        if (sys_setting('is_maintenance') != 1) {
             return to_route('index');
         }
+
         return view('maintenance');
     }
 }
