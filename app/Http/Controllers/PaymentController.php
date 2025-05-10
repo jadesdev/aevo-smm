@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Deposit;
+use App\Traits\ApiResponse;
 use App\Utility\Binance;
 use App\Utility\Coinbase;
 use App\Utility\MonnifyUtility as Monnify;
+use App\Utility\Paypal;
 use Auth;
 use Bhekor\LaravelFlutterwave\Facades\Flutterwave;
 use Http;
@@ -13,6 +15,8 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
+    use ApiResponse;
+
     // FLutter api payment
     public function initFlutterApi($details)
     {
@@ -104,6 +108,36 @@ class PaymentController extends Controller
         }
     }
 
+    public function initPaystack($details)
+    {
+        $amount = round($details['final']);
+        $currency = get_setting('currency_code');
+        $data = [
+            'email' => $details['email'],
+            'amount' => $amount * 100,
+            'currency' => $currency,
+            'reference' => $details['reference'],
+            'callback_url' => route('paystack.success'),
+            'metadata' => $details,
+        ];
+        $payment = Http::withHeaders([
+            'Authorization' => 'Bearer '.env('PAYSTACK_SECRET_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.paystack.co/transaction/initialize', $data)->json();
+
+        if ($payment['status'] !== true) {
+            return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'gateway' => 'paystack',
+            'message' => 'Payment Link generated successfully',
+            'link' => $payment['data']['authorization_url'],
+            'access_code' => $payment['data']['access_code'],
+        ], 200);
+    }
+
     public function paystack_success(Request $request)
     {
         // return $request;
@@ -140,12 +174,32 @@ class PaymentController extends Controller
 
     }
 
+    public function initMonnify($details)
+    {
+        $amount = round($details['final']);
+        $details['amount'] = $amount;
+        $details['redirectUrl'] = route('monnify.success');
+
+        $monnify = new Monnify;
+        $response = $monnify->initializePayment($details);
+        if ($response['responseMessage'] == 'success') {
+            return response()->json([
+                'status' => 'success',
+                'gateway' => 'monnify',
+                'message' => 'Payment Link generated successfully',
+                'link' => $response['responseBody']['checkoutUrl'],
+            ], 200);
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 403);
+        }
+    }
+
     // Monnify Success
     public function monnify_success(Request $request)
     {
         // return $request;
         $data = [
-            'paymentReference' => $request['reference'],
+            'paymentReference' => $request['paymentReference'],
         ];
         $details = $request->session()->get('payment_data');
 
@@ -154,6 +208,7 @@ class PaymentController extends Controller
 
         if ($response['responseMessage'] == 'success' && $response['responseBody']['paymentStatus'] == 'PAID') {
             $complete = new UserController;
+            $details = $response['responseBody']['metaData'];
 
             return $complete->complete_deposit($details, $response);
         } else {
@@ -164,7 +219,6 @@ class PaymentController extends Controller
 
             return redirect()->route('user.deposit')->withError('Payment not successful');
         }
-
     }
 
     public function listing_monnify_success(Request $request)
@@ -184,22 +238,69 @@ class PaymentController extends Controller
         }
     }
 
+    public function initPaypal($details)
+    {
+        $paypal = new Paypal;
+
+        $details['amount'] = $details['final2'];
+        $currency = 'USD';
+
+        $res = $paypal->createPayment($details['amount'], $details, $currency);
+        if (isset($res['status']) && $res['status'] === 'ERROR') {
+            return response()->json(['status' => 'error', 'message' => 'Unable to initialize payment'], 403);
+        }
+        $payLink = null;
+        foreach ($res['links'] as $link) {
+            if ($link['rel'] === 'approve') {
+                $payLink = $link['href'];
+                break;
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'gateway' => 'paypal',
+            'message' => 'Payment Link generated successfully',
+            'link' => $payLink,
+        ], 200);
+    }
+
     // Paypal success
     public function paypal_success(Request $request)
     {
         // return $request;
-        $details = $request->session()->get('payment_data');
-        $req = 'cmd=_notify-validate';
-        if (sys_setting('paypal_demo') == 1) {
-            $paypalURL = 'https://api.sandbox.paypal.com/v2/payments/captures/'; // use for sandbox text
-        } else {
-            $paypalURL = 'https://api.paypal.com/v2/payments/captures/';
+        $orderId = $request->token;
+        if (empty($orderId)) {
+            return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
         }
-        $url = $paypalURL.$request->token;
-        // get deposit and approve payment
-        $complete = new UserController;
+        $paypal = new Paypal;
+        $paymentData = $paypal->getOrderDetails($orderId);
+        $ref = $paymentData['purchase_units'][0]['custom_id'];
+        $deposit = Deposit::whereCode($ref)->firstOrFail();
+        if ($paymentData['status'] == 'APPROVED') {
+            // get deposit and build details
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
 
-        return $complete->complete_deposit($details, $request->all());
+            return $complete->complete_deposit($details, $paymentData);
+        }
+        $deposit->status = 3;
+        $deposit->save();
+
+        return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
     }
 
     // Perfect Money
@@ -226,7 +327,6 @@ class PaymentController extends Controller
         $response = Http::asForm()->post('https://perfectmoney.is/api/step1.asp', $val);
 
         return $send;
-
     }
 
     public function initPerfectMoney($details)
@@ -252,7 +352,6 @@ class PaymentController extends Controller
         $send['url'] = 'https://perfectmoney.is/api/step1.asp';
 
         return $send;
-
     }
 
     public function perfect_success(Request $request)
@@ -351,7 +450,6 @@ class PaymentController extends Controller
                 'message' => 'Payment Link generated successfully',
                 'link' => $response['data']['hosted_url'],
             ], 200);
-
         } else {
             return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 500);
         }
@@ -494,7 +592,6 @@ class PaymentController extends Controller
         } else {
             return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 500);
         }
-
     }
 
     public function binance_webhook(Request $request)
@@ -539,5 +636,22 @@ class PaymentController extends Controller
         }
 
         return $request;
+    }
+
+    public function callbackResponse($type, $message, $url = null)
+    {
+        if (request()->wantsJson()) {
+            if ($type == 'success') {
+                return $this->successResponse($message);
+            }
+
+            return $this->errorResponse($message);
+        }
+
+        if ($type == 'success') {
+            return redirect($url)->withSuccess($message);
+        }
+
+        return redirect($url)->withError($message);
     }
 }

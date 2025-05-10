@@ -340,41 +340,53 @@ class UserController extends Controller
         $request->session()->put('payment_data', $details);
         $request->session()->put('redirect_from', 'website');
 
+        // redirect directly to payment gateways.
+        $payC = app(PaymentController::class);
         // return $details;
         if ($request->method == 'flutterwave') {
-            return view('payments.flutterwave', compact('details'));
+            $response = $payC->initFlutterApi($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'paystack') {
-            return view('payments.paystack', compact('details'));
+            $response = $payC->initPaystack($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'monnify') {
-            return view('payments.monnify', compact('details'));
+            $response = $payC->initMonnify($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'paypal') {
-            return view('payments.paypal', compact('details'));
+            $response = $payC->initPaypal($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'perfect') {
-            $c = new PaymentController;
-            $data = $c->initPerfectMoney($details);
+            $data = $payC->initPerfectMoney($details);
 
+            // Deprecated
             return view('payments.perfect-money', compact('details', 'data'));
         } elseif ($request->method == 'coinbase') {
-            $c = new PaymentController;
-            $data = $c->initCoinbase($details);
+            $data = $payC->initCoinbase($details);
             if ($data['redirect'] == true) {
-                return view('payments.coinbase', compact('details', 'data'));
-            } else {
-                return redirect($data['redirect_url'])->withError('Payment was not successful');
+                return redirect($data['redirect_url']);
             }
         } elseif ($request->method == 'bank') {
             return view('payments.bank', compact('details'));
         } elseif ($request->method == 'binance') {
-            $c = new PaymentController;
-            $data = $c->initBinance($details);
+            $data = $payC->initBinance($details);
             if ($data['redirect'] == true) {
                 return view('payments.binance', compact('details', 'data'));
-            } else {
-                return redirect($data['redirect_url'])->withError('Payment was not successful');
             }
         }
 
-        return back()->withError('Something went wrong');
+        return back()->withError('Payment Initialization failed.');
     }
 
     public function complete_deposit($details, $response = null)
