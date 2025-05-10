@@ -1,0 +1,1 @@
+[{{ $slot }}]({{ route('index') }})

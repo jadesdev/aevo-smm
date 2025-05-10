@@ -1,0 +1,259 @@
+<?php
+
+namespace App\Http\Controllers\Process;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+use App\Utility\{
+    N3tdataUtility, GladApi
+};
+use App\Models\{
+    CablePlan,
+    DataBundle,
+    DatacardPlan,
+    Decoder,
+    DecoderTrx,
+    Education,
+    EduTrx,
+    Electricity,
+    Network,
+    NetworkTrx,
+    PowerTrx,
+    RechargePin,
+    Transaction
+};
+use Exception;
+
+class BillProcess extends Controller
+{
+    //
+    function purchase_airtime($data){
+
+        $network = Network::find($data['network']);
+        try{
+            // glad
+            $slot = new GladApi();
+            $payload = [
+                'network' => $network->code,
+                'mobile_number' => $data['phone'],
+                'airtime_type' => "VTU",
+                'Ported_number' => true,
+                'amount' => $data['amount'],
+            ];
+            $api_result = $slot->buyAirtime($payload);
+            if(isset($api_result['Status']) && $api_result['Status']== "successful"){
+                return $res = [
+                    'name' => "glad",
+                    'ref' => $data['ref'],
+                    'api_status' => "success",
+                    'response' => $api_result,
+                ];
+            }else{
+                return $res = [
+                    'ref' => $data['ref'],
+                    'name' => "glad",
+                    'api_status' => "fail",
+                    'response' => $api_result,
+                ];
+            }
+        }catch(Exception $e){
+            return $res =[
+                'api_status' => "error",
+                'response' => $e->getMessage() ?? "Something is not right",
+                'name' => "glad",
+                'api_status' => "fail",
+                'ref' => $data['ref'],
+            ];
+            return $data;
+        }
+    }
+    function purchase_data($data){
+
+        $network = Network::find($data['network']);
+        $plan = DataBundle::find($data['plan']);
+        // glad
+        try{
+            $slot = new GladApi();
+            $payload = [
+                'network' => ($network->code),
+                'mobile_number' => $data['phone'],
+                'Ported_number' => true,
+                'plan' => $plan->code,
+            ];
+
+            $api_result = $slot->buyData($payload);
+            if(isset($api_result['Status']) && $api_result['Status']== "successful"){
+                return $res = [
+                    'name' => "glad",
+                    'ref' => $data['ref'],
+                    'api_status' => "success",
+                    'response' => $api_result,
+                    'message' => $api_result['api_response'],
+                ];
+            }else{
+                return $res = [
+                    'ref' => $data['ref'],
+                    'name' => "glad",
+                    'api_status' => "fail",
+                    'response' => $api_result,
+                ];
+            }
+        } catch(Exception $e){
+            return $res =[
+                'api_status' => "error",
+                'response' => $e->getMessage() ?? "Something is not right",
+                'name' => "none",
+                'api_status' => "fail",
+                'ref' => $data['ref'],
+            ];
+            return $data;
+        }
+
+    }
+    // cavle
+    function purchase_cabletv($data){
+
+        $decoder = Decoder::find($data['decoder']);
+        $plan = CablePlan::find($data['plan']);
+        // glad
+        try{
+            $slot = new GladApi();
+            $payload = [
+                'cablename' => ($decoder->id),
+                'smart_card_number' => $data['customer'],
+                'cableplan' => $plan->code,
+                'customer_name' => $data["name"]
+            ];
+
+            $api_result = $slot->buyCablesub($payload);
+            if(isset($api_result['Status']) && ($api_result['Status']== "processing" || $api_result['Status']== "successful")){
+                return $res = [
+                    'name' => "glad",
+                    'ref' => $data['ref'],
+                    'api_status' => "success",
+                    'response' => $api_result,
+                ];
+            }else{
+                return $res = [
+                    'ref' => $data['ref'],
+                    'name' => "glad",
+                    'api_status' => "fail",
+                    'response' => $api_result,
+                ];
+            }
+        }catch(Exception $e){
+            return $res =[
+                'api_status' => "error",
+                'response' => $e->getMessage() ?? "Something is not right",
+                'name' => "none",
+                'ref' => $data['ref'],
+            ];
+            return $data;
+        }
+
+    }
+    // power
+    function purchase_power2($data){
+
+        $plan = Electricity::find($data['disco']);
+        // glad
+        try{
+            $slot = new GladApi();
+
+            if($data['type'] == 'prepaid'){
+                $data['type'] = 1;
+            }else{
+                $data['type'] = 2;
+            }
+
+            $payload = [
+                'meter_number' => $data['number'],
+                'disco_name' => $plan->code,
+                'Customer_Phone' => $data["phone"],
+                'customer_name' => $data['name'],
+                'customer_address' => " ",
+                'amount' => $data['amount'],
+                'MeterType' => $data['type'],
+            ];
+
+            $api_result = $slot->buyPower($payload);
+            if(isset($api_result['Status']) && $api_result['Status']== "successful"){
+                return $res = [
+                    'name' => "glad",
+                    'ref' => $data['ref'],
+                    'api_status' => "success",
+                    'response' => $api_result,
+                    'token' => $api_result['token'],
+                ];
+            }else{
+                return $res = [
+                    'ref' => $data['ref'],
+                    'name' => "glad",
+                    'api_status' => "fail",
+                    'response' => $api_result,
+                    "token" => "null",
+                ];
+            }
+        } catch(Exception $e){
+            return $res =[
+                'api_status' => "error",
+                'response' => $e->getMessage() ?? "Something is not right",
+                'name' => "none",
+                'ref' => $data['ref'],
+            ];
+            return $data;
+        }
+    }
+    // power
+    function purchase_power($data){
+
+        $plan = Electricity::find($data['disco']);
+        // glad
+        try{
+
+            $slot = new N3tdataUtility();
+
+            $payload = [
+                'bypass' => false,
+                'request-id' => $data['ref'],
+                'meter_number' => $data['number'],
+                'disco' => $plan->code,
+                'amount' => $data['amount'],
+                'meter_type' => $data['type'],
+            ];
+
+            $api_result = $slot->buyPower($payload);
+            if(isset($api_result['status']) && $api_result['status'] == "success"){
+                $response['ref'] = $api_result['request-id'];
+                $response['token'] = $api_result['token'] ?? " ";
+                return $res = [
+                    'name' => "n3tdata",
+                    'ref' => $response['ref'],
+                    'api_status' => "success",
+                    'response' => $api_result,
+                    'token' => $response['token'],
+                ];
+            }else{
+                return $res = [
+                    'ref' => $data['ref'],
+                    'name' => "n3tdata",
+                    'api_status' => "fail",
+                    'response' => $api_result,
+                    "token" => "null",
+                ];
+            }
+
+
+        } catch(Exception $e){
+            return $res =[
+                'api_status' => "error",
+                'response' => $e->getMessage() ?? "Something is not right",
+                'name' => "none",
+                'ref' => $data['ref'],
+            ];
+            return $data;
+        }
+    }
+
+}
