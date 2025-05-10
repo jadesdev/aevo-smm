@@ -139,6 +139,11 @@ class CronController extends Controller
                     general_email($user->email, $sub, $mesg);
 
                     // send notification
+                    sendUserNotification(
+                        $user,
+                        'Order Completed',
+                        "Your Order: #{$order->id} is completed. "
+                    );
 
                 }
 

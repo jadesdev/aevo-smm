@@ -540,7 +540,11 @@ function give_deposit_bonus($id, $method, $amount)
     <br> <p> See Below for details of Transactions. </p>
         Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
     general_email($user->email, 'Credit Alert', $e_mess);
-
+    sendUserNotification(
+        $user,
+        'Deposit Bonus ',
+        "You eared {$trans->message}"
+    );
     return true;
 }
 
@@ -570,6 +574,12 @@ function give_affiliate_bonus($id, $amount)
         <br> <p> See Below for details of Transactions. </p>
             Amount : '.format_price($commission)."<br> Details: Referral Bonus from {$user->username} <br> Reference : {$trxcode} <br> Balance: ".format_price($refer->bonus).'<br> Date : '.show_datetime(now());
         general_email($refer->email, 'Credit Alert', $e_mess);
+
+        sendUserNotification(
+            $user,
+            'Referral Bonus Earned',
+            "You earned a referral bonus from {$user->username}"
+        );
     }
 
 }
@@ -640,6 +650,11 @@ function give_welcomet_bonus($id)
         Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
     general_email($user->email, 'Credit Alert', $e_mess);
 
+    sendUserNotification(
+        $user,
+        'Welcome Bonus Earned',
+        "You earned a {$trans->message}"
+    );
     return true;
 }
 
@@ -669,6 +684,11 @@ function giveUserPoint($id, $amount)
         $log->message = "{$point} {$pcode} earned for spending ".format_price($amount);
         $log->save();
 
+        sendUserNotification(
+            $user,
+            'New Bonus Earned',
+            $log->message
+        );
         return true;
     }
 
@@ -735,4 +755,30 @@ function format_amount($price)
     } else {
         return format_price($price);
     }
+}
+
+// User Notification
+function sendUserNotification($user, $title, $message, $link = null)
+{
+    $user->notify()->create([
+        'title' => $title,
+        'type' => 'user',
+        'message' => $message,
+        'url' => $link ?? null,
+    ]);
+}
+
+function userUnreadNotifications()
+{
+    $user = Auth::user();
+    $key = $user->id . '_notify_count';
+
+    $ticketCount = Cache::remember($key, 30, function () use ($user) {
+        return $user->notifys()
+            ->where('view', 0)
+            ->where('created_at', '>=', now()->subHours(4))
+            ->count();
+    });
+
+    return $ticketCount ?? 0;
 }

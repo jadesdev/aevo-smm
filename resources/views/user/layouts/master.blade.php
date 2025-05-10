@@ -48,6 +48,7 @@
     }
   }
   </script>
+  @include('user.layouts.header-styles')
 
 </head>
 {{-- <body oncontextmenu="return false" onselectstart="return false" ondragstart="return false"></body> --}}
