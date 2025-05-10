@@ -545,6 +545,7 @@ function give_deposit_bonus($id, $method, $amount)
         'Deposit Bonus ',
         "You eared {$trans->message}"
     );
+
     return true;
 }
 
@@ -655,6 +656,7 @@ function give_welcomet_bonus($id)
         'Welcome Bonus Earned',
         "You earned a {$trans->message}"
     );
+
     return true;
 }
 
@@ -689,6 +691,7 @@ function giveUserPoint($id, $amount)
             'New Bonus Earned',
             $log->message
         );
+
         return true;
     }
 
@@ -771,7 +774,7 @@ function sendUserNotification($user, $title, $message, $link = null)
 function userUnreadNotifications()
 {
     $user = Auth::user();
-    $key = $user->id . '_notify_count';
+    $key = $user->id.'_notify_count';
 
     $ticketCount = Cache::remember($key, 30, function () use ($user) {
         return $user->notifys()

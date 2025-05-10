@@ -121,6 +121,48 @@
     <div class="col-sm-6 col-md-3">
         <div class="d-card">
             <div class="card-header">
+                <h5 class="mb-0 fw-bold ">Heleket</h5>
+            </div>
+            <div class="d-card-body">
+                <div class="form-group row">
+                    <div class="col-9">
+                        <label class="form-label">Enable </label>
+                    </div>
+                    <div class="col-3">
+                        <label class="jdv-switch jdv-switch-success mb-0">
+                            <input type="checkbox" onchange="updateSystem(this, 'heleket_payment')"
+                                @if (sys_setting('heleket_payment') == 1) checked @endif>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="d-card">
+            <div class="card-header">
+                <h5 class="mb-0 fw-bold ">Moorle</h5>
+            </div>
+            <div class="d-card-body">
+                <div class="form-group row">
+                    <div class="col-9">
+                        <label class="form-label">Enable </label>
+                    </div>
+                    <div class="col-3">
+                        <label class="jdv-switch jdv-switch-success mb-0">
+                            <input type="checkbox" onchange="updateSystem(this, 'moorle_payment')"
+                                @if (sys_setting('moorle_payment') == 1) checked @endif>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="d-card">
+            <div class="card-header">
                 <h5 class="mb-0 fw-bold ">Bank Transfer</h5>
             </div>
             <div class="d-card-body">
@@ -415,7 +457,80 @@
             </form>
         </div>
     </div>
-
+    <div class="col-sm-6 col-md-4">
+        <div class="d-card">
+            <div class="card-header">
+                <h5 class="mb-0 fw-bold">Heleket Credentials</h5>
+            </div>
+            <div class="d-card-body">
+                <form class="form-horizontal" action="{{ route('admin.setting.env_key') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="payment_method" value="heleket">
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="HELEKET_MERCHANT">
+                        <label class="form-label">{{ __('Merchant ID') }}</label>
+                        <input type="text" class="form-control" name="HELEKET_MERCHANT" value="{{ env('HELEKET_MERCHANT') }}"
+                            placeholder="Merchant ID" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="HELEKET_API">
+                        <label class="form-label">{{ __('API Key') }}</label>
+                        <input type="text" class="form-control" name="HELEKET_API" value="{{ env('HELEKET_API') }}"
+                            placeholder="API Key" required>
+                    </div>
+                    <div class="form-group mb-0 text-end">
+                        <button type="submit" class="btn btn-md btn-success w-100">{{ __('Save') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <div class="d-card">
+            <div class="card-header">
+                <h5 class="mb-0 fw-bold">Moolre Credentials</h5>
+            </div>
+            <div class="d-card-body">
+                <form class="form-horizontal" action="{{ route('admin.setting.env_key') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="payment_method" value="moolre">
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="MOOLRE_API_USER">
+                        <label class="form-label">{{ __('API User') }}</label>
+                        <input type="text" class="form-control" name="MOOLRE_API_USER" value="{{ env('MOOLRE_API_USER') }}"
+                            placeholder="Your Moolre username" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="MOOLRE_API_KEY">
+                        <label class="form-label">{{ __('API Key (Private)') }}</label>
+                        <input type="text" class="form-control" name="MOOLRE_API_KEY" value="{{ env('MOOLRE_API_KEY') }}"
+                            placeholder="Your Private API Key" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="MOOLRE_API_PUBKEY">
+                        <label class="form-label">{{ __('API Public Key') }}</label>
+                        <input type="text" class="form-control" name="MOOLRE_API_PUBKEY" value="{{ env('MOOLRE_API_PUBKEY') }}"
+                            placeholder="Your Public API Key" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="MOOLRE_ACCOUNT_NUMBER">
+                        <label class="form-label">{{ __('Account Number') }}</label>
+                        <input type="text" class="form-control" name="MOOLRE_ACCOUNT_NUMBER"
+                            value="{{ env('MOOLRE_ACCOUNT_NUMBER') }}" placeholder="Your Moolre Account Number" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="types[]" value="MOOLRE_WEBHOOK_SECRET">
+                        <label class="form-label">{{ __('Webhook Secret') }}</label>
+                        <input type="text" class="form-control" name="MOOLRE_WEBHOOK_SECRET"
+                            value="{{ env('MOOLRE_WEBHOOK_SECRET') }}" placeholder="Webhook Secret (Optional)">
+                    </div>
+                    <div class="form-group mb-0 text-end">
+                        <button type="submit" class="btn btn-md btn-success w-100">{{ __('Save') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="col-sm-6 col-md-4">
         <div class="d-card">
             <h5 class="card-header fw-bold mb-0">Bank Payment Details</h5>

@@ -123,7 +123,7 @@ class PaymentController extends Controller
             'metadata' => $details,
         ];
         $payment = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+            'Authorization' => 'Bearer '.env('PAYSTACK_SECRET_KEY'),
             'Content-Type' => 'application/json',
         ])->post('https://api.paystack.co/transaction/initialize', $data)->json();
 
@@ -145,11 +145,11 @@ class PaymentController extends Controller
         // return $request;
         $payment = [];
         // The parameter after verify/ is the transaction reference to be verified
-        $url = 'https://api.paystack.co/transaction/verify/' . $request->reference;
+        $url = 'https://api.paystack.co/transaction/verify/'.$request->reference;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . env('PAYSTACK_SECRET_KEY')]);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer '.env('PAYSTACK_SECRET_KEY')]);
         $response = curl_exec($ch);
         curl_close($ch);
         if ($response) {
@@ -652,6 +652,7 @@ class PaymentController extends Controller
         $res = $heleket->createPayment($details['amount'], $details, $currency);
         if (isset($res['result']) && $res['result']['url'] != null) {
             $payLink = $res['result']['url'];
+
             return [
                 'status' => 'success',
                 'gateway' => 'heleket',
@@ -663,9 +664,9 @@ class PaymentController extends Controller
         }
     }
 
-    function heleket_success(Request $request)
+    public function heleket_success(Request $request)
     {
-        $response  = $request->all();
+        $response = $request->all();
         // log webhook response
         $logFile = 'public/heleket_webhook_response_log.txt';
         $logMessage = json_encode($response, JSON_PRETTY_PRINT);
@@ -705,12 +706,13 @@ class PaymentController extends Controller
 
     public function initMoorle($details)
     {
-        $moorle = new Moolre();
+        $moorle = new Moolre;
 
         $details['amount'] = $details['final'];
         $res = $moorle->generatePaymentLink($details['amount'], $details);
         if (isset($res['code']) && $res['code'] === 'POS09') {
             $payLink = $res['data']['authorization_url'];
+
             return [
                 'status' => 'success',
                 'gateway' => 'moorle',
@@ -718,13 +720,14 @@ class PaymentController extends Controller
                 'link' => $payLink,
             ];
         }
+
         return ['status' => 'error', 'message' => 'Unable to initialize payment'];
     }
 
     public function moorle_success(Request $request)
     {
-        $response  = $request->all();
-        $moorle = new Moolre();
+        $response = $request->all();
+        $moorle = new Moolre;
         // validate webhook sign
         if ($moorle->validateWebhook($response, $response['data']['secret']) == false) {
             // return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
@@ -757,6 +760,7 @@ class PaymentController extends Controller
             return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
         }
     }
+
     public function callbackResponse($type, $message, $url = null)
     {
         if (request()->wantsJson()) {

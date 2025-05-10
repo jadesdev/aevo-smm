@@ -194,8 +194,8 @@ class OrderController extends Controller
             'Order Status Updated',
             "Your Order: #{$order->id} is now {$order->status}. "
         );
-        return back()->with('success', 'Order Updated Successfully');
 
+        return back()->with('success', 'Order Updated Successfully');
     }
 
     public function update_order_status(Request $request)
@@ -233,7 +233,6 @@ class OrderController extends Controller
                         $trans->new_balance = $user->balance;
                         $trans->old_balance = $user->balance - $getBackAmo;
                         $trans->save();
-
                     }
                     $order->error = 0;
                     $order->status = $status;
@@ -246,7 +245,7 @@ class OrderController extends Controller
                         <a href='".route('user.orders.create')."' style='display: inline-block; background-color: #fa6e39; border: none; color: white; padding: 10px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px;'>New Order</a>";
                         general_email($user->email, $sub, $mesg);
 
-                        // send notification 
+                        // send notification
                         sendUserNotification(
                             $user,
                             'Order Completed',
@@ -261,7 +260,6 @@ class OrderController extends Controller
                     // general_email($user->email, $sub, $mesg );
 
                     return $order;
-
                 });
 
                 return $logs;

@@ -61,12 +61,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getFullnameAttribute()
     {
-        return $this->fname . ' ' . $this->lname;
+        return $this->fname.' '.$this->lname;
     }
 
     public function name()
     {
-        return $this->fname . ' ' . $this->lname;
+        return $this->fname.' '.$this->lname;
     }
 
     public function refer()
@@ -108,7 +108,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(PointLog::class)->orderByDesc('id');
     }
-    
+
     public function notify()
     {
         return $this->hasMany(Notification::class);
