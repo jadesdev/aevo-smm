@@ -42,6 +42,8 @@
           }
         }
     </script>
+
+    @include('user4.layouts.header-styles')
 </head>
 
 

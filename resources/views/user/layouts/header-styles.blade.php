@@ -110,10 +110,6 @@
         border-top: 1px solid #e9ecef;
     }
 
-    .notify-item {
-        border-bottom: 1px solid #c6c8cb;
-    }
-
     .notify-item:last-child {
         border-bottom: none;
     }
@@ -207,6 +203,7 @@
         border-radius: 10px;
         border: none;
         box-shadow: none;
+        border: 1px solid #a6a6a682;
     }
 
     body.dark .card-notif {

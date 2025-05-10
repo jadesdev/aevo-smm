@@ -15,7 +15,7 @@
                 </div>
                 @if (sys_setting('multi_currency') == 1)
                     <div class="currency-switcher">
-                        <select id="currency-select" style="background: #ff401a;  color: #fff; font-size: 10px;  border: none;"
+                        <select id="currency-select" style="font-size: 10px;"
                             class="form-control" onchange="changeCurrency(this.value)">
                             @foreach (get_all_active_currency() as $currency)
                                 <option value="{{ $currency->code }}" @if (get_system_currency()->code == $currency->code) selected @endif
@@ -38,11 +38,11 @@
                     <div class="dropdown-menu notify-dropdown px-1" aria-labelledby="notificationDropdown">
                         <div class="p-2 d-flex justify-content-between">
                             <h6 class="m-0 fw-semibold"> Notifications</h6>
-                            <button type="button" class="d-lg-none btn btn-outline-secondary my-auto" data-dismiss="dropdown"
-                                aria-label="Close">X</button>
+                                <button type="button" class="d-lg-none btn btn-sm btn-outline-secondary my-auto" data-dismiss="dropdown"
+                                    aria-label="Close">X</button>
                         </div>
                         <div style="overflow-y: auto;" class="j-scroller noti-height" id="notifysContent">
-                            @forelse (auth()->user()->notifys as $item)
+                            @forelse (auth()->user()->notifys()->limit(10)->get() as $item)
                                 <a href="@if ($item->url) {{ $item->url }} @else javascript:void(0); @endif"
                                     class="dropdown-item p-0 notify-item ">
 
@@ -52,7 +52,7 @@
                                                 <h4 class="noti-item-title fw-semibold fs-14" style="text-transform:uppercase;">
                                                     {{ $item->title }} </h4>
 
-                                                <p class="noti-item-subtitle text-muted">{!! nl2br($item->message) !!} </p>
+                                                <p class="noti-item-subtitle ">{!! nl2br($item->message) !!} </p>
                                                 <small
                                                     class="tima text-muted float-right mx-1">{{ $item->created_at->diffForHumans() }}</small>
                                             </div>
