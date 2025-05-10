@@ -25,24 +25,38 @@ if (! function_exists('my_asset')) {
 }
 
 if (! function_exists('get_setting')) {
-    function get_setting($key)
+    function get_setting($key = null)
     {
-        $settings = Setting::first();
-        $setting = $settings->$key;
+        $settings = Cache::get('Settings');
 
-        return $setting;
+        if (! $settings) {
+            $settings = Setting::first();
+            Cache::put('Settings', $settings, 300);
+        }
+
+        if ($key) {
+            return @$settings->$key;
+        }
+
+        return $settings;
     }
 }
 
 if (! function_exists('sys_setting')) {
     function sys_setting($key, $default = null)
     {
-        $settings = SystemSetting::all();
+        $settings = Cache::get('SystemSettings');
+
+        if (! $settings) {
+            $settings = SystemSetting::all();
+            Cache::put('SystemSettings', $settings, 30);
+        }
         $setting = $settings->where('name', $key)->first();
 
         return $setting == null ? $default : $setting->value;
     }
 }
+
 function text_trim($string, $length = null)
 {
     if (empty($length)) {

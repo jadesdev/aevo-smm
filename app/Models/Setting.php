@@ -30,4 +30,12 @@ class Setting extends Model
         'is_adsense',
         'meta_keywords', 'is_announcement', 'announcement', 'page_title', 'page_body',
     ];
+    
+    protected static function boot()
+    {
+        parent::boot();
+        static::saved(function () {
+            \Cache::forget('Settings');
+        });
+    }
 }
