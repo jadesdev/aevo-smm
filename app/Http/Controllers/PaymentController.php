@@ -6,7 +6,9 @@ use App\Models\Deposit;
 use App\Traits\ApiResponse;
 use App\Utility\Binance;
 use App\Utility\Coinbase;
+use App\Utility\Heleket;
 use App\Utility\MonnifyUtility as Monnify;
+use App\Utility\Moolre;
 use App\Utility\Paypal;
 use Auth;
 use Bhekor\LaravelFlutterwave\Facades\Flutterwave;
@@ -121,7 +123,7 @@ class PaymentController extends Controller
             'metadata' => $details,
         ];
         $payment = Http::withHeaders([
-            'Authorization' => 'Bearer '.env('PAYSTACK_SECRET_KEY'),
+            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
             'Content-Type' => 'application/json',
         ])->post('https://api.paystack.co/transaction/initialize', $data)->json();
 
@@ -143,11 +145,11 @@ class PaymentController extends Controller
         // return $request;
         $payment = [];
         // The parameter after verify/ is the transaction reference to be verified
-        $url = 'https://api.paystack.co/transaction/verify/'.$request->reference;
+        $url = 'https://api.paystack.co/transaction/verify/' . $request->reference;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer '.env('PAYSTACK_SECRET_KEY')]);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . env('PAYSTACK_SECRET_KEY')]);
         $response = curl_exec($ch);
         curl_close($ch);
         if ($response) {
@@ -638,6 +640,123 @@ class PaymentController extends Controller
         return $request;
     }
 
+    // heleket
+    public function initHeleket($details)
+    {
+        $heleket = new Heleket;
+
+        $details['amount'] = $details['final2'];
+        $currency = 'USD';
+        $details['cancelUrl'] = route('user.deposit');
+
+        $res = $heleket->createPayment($details['amount'], $details, $currency);
+        if (isset($res['result']) && $res['result']['url'] != null) {
+            $payLink = $res['result']['url'];
+            return [
+                'status' => 'success',
+                'gateway' => 'heleket',
+                'message' => 'Payment Link generated successfully',
+                'link' => $payLink,
+            ];
+        } else {
+            return ['status' => 'error', 'message' => 'Unable to initialize payment'];
+        }
+    }
+
+    function heleket_success(Request $request)
+    {
+        $response  = $request->all();
+        // log webhook response
+        $logFile = 'public/heleket_webhook_response_log.txt';
+        $logMessage = json_encode($response, JSON_PRETTY_PRINT);
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        // validate webhook sign
+        $heleket = new Heleket;
+        if ($heleket->validateSignature($response, $response['sign']) == false) {
+            return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
+        }
+        $deposit = Deposit::where('code', $response['order_id'])->firstOrFail();
+        if ($response['status'] == 'paid') {
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
+
+            return $complete->complete_deposit($details, $response);
+        } else {
+
+            $deposit->status = 3;
+            $deposit->save();
+
+            return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
+        }
+    }
+
+    public function initMoorle($details)
+    {
+        $moorle = new Moolre();
+
+        $details['amount'] = $details['final'];
+        $res = $moorle->generatePaymentLink($details['amount'], $details);
+        if (isset($res['code']) && $res['code'] === 'POS09') {
+            $payLink = $res['data']['authorization_url'];
+            return [
+                'status' => 'success',
+                'gateway' => 'moorle',
+                'message' => 'Payment Link generated successfully',
+                'link' => $payLink,
+            ];
+        }
+        return ['status' => 'error', 'message' => 'Unable to initialize payment'];
+    }
+
+    public function moorle_success(Request $request)
+    {
+        $response  = $request->all();
+        $moorle = new Moolre();
+        // validate webhook sign
+        if ($moorle->validateWebhook($response, $response['data']['secret']) == false) {
+            // return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
+        }
+        $ref = $response['data']['externalref'] ?? null;
+        $deposit = Deposit::where('code', $ref)->firstOrFail();
+        if ($response['data']['txstatus'] == 1) {
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
+
+            return $complete->complete_deposit($details, $response);
+        } else {
+
+            $deposit->status = 3;
+            $deposit->save();
+
+            return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
+        }
+    }
     public function callbackResponse($type, $message, $url = null)
     {
         if (request()->wantsJson()) {

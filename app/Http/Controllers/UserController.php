@@ -47,7 +47,7 @@ class UserController extends Controller
     {
         $trx = Transaction::whereUserId(auth()->id())->orderByDesc('id')->paginate(10);
 
-        return view($this->theme.'index', compact('trx'));
+        return view($this->theme . 'index', compact('trx'));
     }
 
     public function logout()
@@ -65,7 +65,7 @@ class UserController extends Controller
         $monnify = new MonnifyUtility;
         $verifybanks = [];
 
-        return view($this->theme.'profile', compact('verifybanks', 'banks'));
+        return view($this->theme . 'profile', compact('verifybanks', 'banks'));
     }
 
     public function update_profile(Request $request)
@@ -79,7 +79,7 @@ class UserController extends Controller
             'lname' => 'required|string',
             'phone' => 'required|string',
             'address' => 'nullable|string',
-            'username' => 'required|string|unique:users,username,'.auth()->id().'|max:25|regex:/\w*$/|alpha_dash',
+            'username' => 'required|string|unique:users,username,' . auth()->id() . '|max:25|regex:/\w*$/|alpha_dash',
         ]);
         // return $request;
         $user = Auth::user();
@@ -200,7 +200,6 @@ class UserController extends Controller
                         $sts = 'error';
                     }
                 }
-
             } else {
                 // return error without refund
                 $trans->save();
@@ -250,7 +249,6 @@ class UserController extends Controller
         if (Auth::user()->virtual_ref == null) {
             try {
                 $this->generate_bank();
-
             } catch (\Exception $e) {
                 // dd($e);
                 return redirect()->back()->withError('Virtual Account not Generated. Please Try again');
@@ -258,7 +256,6 @@ class UserController extends Controller
         }
 
         return redirect()->back()->withSuccess('Account number was Generated Successfully.');
-
     }
 
     public function generate_bank()
@@ -270,7 +267,7 @@ class UserController extends Controller
             'email' => $user['email'],
             'name' => $user->name(),
             'currency' => get_setting('currency_code'),
-            'reference' => \getTrx(8).$user['username'],
+            'reference' => \getTrx(8) . $user['username'],
         ];
         $response = $monnify->reserveAccount($data);
         if ($response['responseMessage'] == 'success') {
@@ -293,15 +290,15 @@ class UserController extends Controller
         $monnify = new MonnifyUtility;
         $verifybanks = Cache::get('monnify_banks') ?? [];
 
-        return view($this->theme.'deposit', compact('deposits', 'banks', 'verifybanks'));
+        return view($this->theme . 'deposit', compact('deposits', 'banks', 'verifybanks'));
     }
 
     public function deposit_money(Request $request)
     {
         $req = Purify::clean($request->all());
         $validator = Validator::make($req, [
-            'amount' => 'required|numeric|min:'.sys_setting('min_deposit'),
-            'method' => 'required|in:paystack,flutterwave,paypal,monnify,coinbase,perfect,bank,binance',
+            'amount' => 'required|numeric|min:' . sys_setting('min_deposit'),
+            'method' => 'required|in:paystack,flutterwave,paypal,monnify,coinbase,perfect,bank,binance,heleket,moorle',
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -382,7 +379,17 @@ class UserController extends Controller
         } elseif ($request->method == 'binance') {
             $data = $payC->initBinance($details);
             if ($data['redirect'] == true) {
-                return view('payments.binance', compact('details', 'data'));
+                return redirect($data['redirect_url']);
+            }
+        } elseif ($request->method == 'heleket') {
+            $data = $payC->initHeleket($details);
+            if ($data['status'] == 'success') {
+                return redirect($data['link']);
+            }
+        } elseif ($request->method == 'moorle') {
+            $data = $payC->initMoorle($details);
+            if ($data['status'] == 'success') {
+                return redirect($data['link']);
             }
         }
 
@@ -395,7 +402,7 @@ class UserController extends Controller
         $user = User::findOrFail($details['user_id']);
         $deposit = Deposit::whereCode($details['reference'])->first();
         if ($deposit != null & $deposit->status != 1) {
-            $deposit->message = 'You have successfully fund your wallet with '.format_price($deposit['amount']);
+            $deposit->message = 'You have successfully fund your wallet with ' . format_price($deposit['amount']);
             $deposit->response = json_encode($response);
             $deposit->status = 1;
             $deposit->save();
@@ -417,10 +424,16 @@ class UserController extends Controller
             $user->balance = $trans['new_balance'];
             $user->save();
             // send email
-            $e_mess = "Hi {$user->username}, <br> A credit transaction  of <b>".format_price($trans->amount).'<b> occured on your Account.
+            $e_mess = "Hi {$user->username}, <br> A credit transaction  of <b>" . format_price($trans->amount) . '<b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
-                Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
+                Amount : ' . format_price($trans->amount) . "<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: " . format_price($user->balance) . '<br> Date : ' . show_datetime($trans->created_at);
             general_email($user->email, 'Credit Alert', $e_mess);
+            // user notification
+            sendUserNotification(
+                $user,
+                'Deposit Successful',
+                $trans->message
+            );
             // give bonus
             give_deposit_bonus($user->id, $deposit->gateway, $deposit->amount);
             session()->remove('payment_data');
@@ -468,7 +481,7 @@ class UserController extends Controller
             $charge = sys_setting('auto_cap');
         }
 
-        $messg = 'You have successfully fund your wallet with '.format_price($details['amount']);
+        $messg = 'You have successfully fund your wallet with ' . format_price($details['amount']);
         // save to deposit
         $deposit = new Deposit;
         $deposit->user_id = $user->id;
@@ -502,9 +515,9 @@ class UserController extends Controller
         $user->balance = $trans['new_balance'];
         $user->save();
         // send email
-        $e_mess = "Hi {$user->username}, <br> A credit transaction  of <b>".format_price($trans->amount).'<b> occured on your Account.
+        $e_mess = "Hi {$user->username}, <br> A credit transaction  of <b>" . format_price($trans->amount) . '<b> occured on your Account.
         <br> <p> See Below for details of Transactions. </p>
-            Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
+            Amount : ' . format_price($trans->amount) . "<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: " . format_price($user->balance) . '<br> Date : ' . show_datetime($trans->created_at);
         general_email($user->email, 'Credit Alert', $e_mess);
         // give bonus
         give_deposit_bonus($user->id, $deposit->gateway, $deposit->amount);
@@ -525,9 +538,9 @@ class UserController extends Controller
         // upload document
         if ($request->hasFile('document')) {
             $document = $request->file('document');
-            $name = Str::random(22).'.jpg';
+            $name = Str::random(22) . '.jpg';
             $document->move(public_path('uploads/payment'), $name);
-            $deposit->image = 'payment/'.$name;
+            $deposit->image = 'payment/' . $name;
         }
         $deposit->status = 2;
         $deposit->save();
@@ -544,22 +557,21 @@ class UserController extends Controller
             $trx = Transaction::whereUserId(auth()->id())->search($request->search)->orderByDesc('id')->paginate(50);
         }
 
-        return view($this->theme.'transaction', compact('trx', 'search'));
+        return view($this->theme . 'transaction', compact('trx', 'search'));
     }
 
     public function services(Request $request)
     {
         $categories = Category::has('services')->whereStatus(1)->orderBy('name', 'asc')->paginate(1000);
         if ($request->has('search')) {
-
         }
 
-        return view($this->theme.'services', compact('request', 'categories'));
+        return view($this->theme . 'services', compact('request', 'categories'));
     }
 
     public function api_docs()
     {
-        return view($this->theme.'apidocs');
+        return view($this->theme . 'apidocs');
     }
 
     public function affiliate()
@@ -568,7 +580,7 @@ class UserController extends Controller
         $banks = json_decode($banks);
         $payouts = Withdrawal::whereUserId(Auth::id())->whereType('bank')->whereService('referral')->get();
 
-        return view($this->theme.'affiliate', compact('banks', 'payouts'));
+        return view($this->theme . 'affiliate', compact('banks', 'payouts'));
     }
 
     public function bank_account(Request $request)
@@ -605,7 +617,7 @@ class UserController extends Controller
             $trans->user_id = $user->id;
             $trans->type = 1; // 1- credit, 2- deit, 3-others
             $trans->code = getTrx(14);
-            $trans->message = 'Your withdrawal of '.format_price($request->amount).' to main wallet was successful';
+            $trans->message = 'Your withdrawal of ' . format_price($request->amount) . ' to main wallet was successful';
             $trans->amount = $request->amount;
             $trans->status = 1;
             $trans->charge = 0;
@@ -623,14 +635,13 @@ class UserController extends Controller
             $withdraw->code = $trans->code;
             $withdraw->status = 1;
             $withdraw->charge = 0;
-            $withdraw->message = 'Your withdrawal of '.format_price($request->amount).' to main wallet was successful';
+            $withdraw->message = 'Your withdrawal of ' . format_price($request->amount) . ' to main wallet was successful';
             $withdraw->type = 'wallet';
             $withdraw->save();
             $message = $trans->message;
-
         } elseif ($request->withdraw_type == 'bank') {
             if (sys_setting('min_withdraw') > $request->amount) {
-                return back()->with('error', 'You can not withdraw below the minimum withdrawal amount '.format_price(sys_setting('min_withdraw')));
+                return back()->with('error', 'You can not withdraw below the minimum withdrawal amount ' . format_price(sys_setting('min_withdraw')));
             }
 
             if ($user->acc_name == null || $user->acc_number == null || $user->bank_name == null) {
@@ -661,7 +672,7 @@ class UserController extends Controller
             $withdraw->user_id = $user->id;
             $withdraw->code = $trans->code;
             $withdraw->status = 2;
-            $withdraw->message = 'Your withdrawal of '.format_price($request->amount).' is pending.';
+            $withdraw->message = 'Your withdrawal of ' . format_price($request->amount) . ' is pending.';
             $withdraw->type = 'bank';
             $withdraw->save();
             $message = 'Withdrawal has been placed successfully and your account would be credited soon';
@@ -674,7 +685,7 @@ class UserController extends Controller
     {
         $request->validate([
             'withdraw_type' => 'string|required',
-            'points' => 'required|integer|min:'.sys_setting('point_minimum'),
+            'points' => 'required|integer|min:' . sys_setting('point_minimum'),
         ]);
         $user = Auth::user();
         $pvalue = sys_setting('point_value');
@@ -682,7 +693,7 @@ class UserController extends Controller
         $pcode = sys_setting('point_code');
 
         if ($user->points < $request->points) {
-            return back()->with('error', 'You dont have enough '.sys_setting('point_code').' points to withdraw');
+            return back()->with('error', 'You dont have enough ' . sys_setting('point_code') . ' points to withdraw');
         }
 
         if (sys_setting('point_withdraw') != 1) {
@@ -699,7 +710,7 @@ class UserController extends Controller
             $trans->user_id = $user->id;
             $trans->type = 1; // 1- credit, 2- deit, 3-others
             $trans->code = getTrx(14);
-            $trans->message = 'Your withdrawal of '.($request->points)." {$pcode} to main wallet was successful";
+            $trans->message = 'Your withdrawal of ' . ($request->points) . " {$pcode} to main wallet was successful";
             $trans->amount = $amount;
             $trans->status = 1;
             $trans->charge = 0;
@@ -715,7 +726,7 @@ class UserController extends Controller
             $log->amount = $amount;
             $log->code = getTrx(14);
             $log->status = 1;
-            $log->message = "{$request->points} {$pcode} converted to main wallet for spending ".format_price($amount);
+            $log->message = "{$request->points} {$pcode} converted to main wallet for spending " . format_price($amount);
             $log->save();
 
             $message = $trans->message;
@@ -728,12 +739,12 @@ class UserController extends Controller
     {
         $faqs = Faq::whereStatus(1)->get();
 
-        return view($this->theme.'faq', compact('faqs'));
+        return view($this->theme . 'faq', compact('faqs'));
     }
 
     public function terms()
     {
-        return view($this->theme.'terms');
+        return view($this->theme . 'terms');
     }
 
     public function close_message()
