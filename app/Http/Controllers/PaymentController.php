@@ -180,7 +180,9 @@ class PaymentController extends Controller
     public function initMonnify($details)
     {
         $amount = round($details['final']);
-        $details['amount'] = $amount;
+        $rate = Currency::whereCode('NGN')->first()->rate ?? 1;
+        $details['amount'] = $amount * $rate;
+        $details['currency'] = 'NGN';
         $details['redirectUrl'] = route('monnify.success');
 
         $monnify = new Monnify;
@@ -709,10 +711,10 @@ class PaymentController extends Controller
     {
         $moorle = new Moolre;
         $details['redirect'] = route('moorle.success');
-        // get GHS currency rate. 
+        // get GHS currency rate.
         $rate = Currency::whereCode('GHS')->first()->rate ?? 1;
         $details['amount'] = $details['final'] * $rate;
-        $res = $moorle->generatePaymentLink($details['amount'], $details);
+        $res = $moorle->generatePaymentLink($details['amount'], $details, 'GHS');
         if (isset($res['code']) && $res['code'] === 'POS09') {
             $payLink = $res['data']['authorization_url'];
 
