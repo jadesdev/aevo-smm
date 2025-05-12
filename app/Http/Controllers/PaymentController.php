@@ -707,7 +707,7 @@ class PaymentController extends Controller
     public function initMoorle($details)
     {
         $moorle = new Moolre;
-
+        $details['redirect'] = route('moorle.success');
         $details['amount'] = $details['final'];
         $res = $moorle->generatePaymentLink($details['amount'], $details);
         if (isset($res['code']) && $res['code'] === 'POS09') {
@@ -728,6 +728,11 @@ class PaymentController extends Controller
     {
         $response = $request->all();
         $moorle = new Moolre;
+
+        // log webhook response
+        $logFile = 'public/moorle_webhook_response_log.txt';
+        $logMessage = json_encode($response, JSON_PRETTY_PRINT);
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
         // validate webhook sign
         if ($moorle->validateWebhook($response, $response['data']['secret']) == false) {
             // return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
