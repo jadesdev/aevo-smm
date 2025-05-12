@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Currency;
 use App\Models\Deposit;
 use App\Traits\ApiResponse;
 use App\Utility\Binance;
@@ -708,7 +709,9 @@ class PaymentController extends Controller
     {
         $moorle = new Moolre;
         $details['redirect'] = route('moorle.success');
-        $details['amount'] = $details['final'];
+        // get GHS currency rate. 
+        $rate = Currency::whereCode('GHS')->first()->rate ?? 1;
+        $details['amount'] = $details['final'] * $rate;
         $res = $moorle->generatePaymentLink($details['amount'], $details);
         if (isset($res['code']) && $res['code'] === 'POS09') {
             $payLink = $res['data']['authorization_url'];
