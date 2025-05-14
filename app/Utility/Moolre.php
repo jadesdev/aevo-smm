@@ -39,7 +39,7 @@ class Moolre
             'reusable' => false,
             'amount' => $amount,
             'externalref' => $params['reference'],
-            'callback' => route('moorle.success'),
+            'callback' => route('moorle.webhook'),
             'metadata' => $params,
         ];
 

@@ -195,7 +195,8 @@ Route::controller(PaymentController::class)->group(function () {
     Route::any('/webhook/binance-notification/', 'binance_webhook')->name('binance.webhook');
     Route::any('/monnify/success/listings', 'listing_monnify_success')->name('monnify.success.listing');
     Route::any('/heleket-success', 'heleket_success')->name('heleket.success');
-    Route::any('moorle-success', 'moorle_success')->name('moorle.success');
+    Route::get('moorle-success', 'moorle_success')->name('moorle.success');
+    Route::any('moorle-webhook', 'moorle_webhook')->name('moorle.webhook');
 });
 // Monify webhook
 Route::any('/webhook/monnify-transactions', [App\Http\Controllers\PaymentController::class, 'monnify_webhook'])->name('monnify.webhook');
