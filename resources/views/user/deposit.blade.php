@@ -96,6 +96,12 @@
                                 @if (sys_setting('binance_payment') == 1)
                                     <option value="binance">Binance Pay </option>
                                 @endif
+                                @if (sys_setting('heleket_payment') == 1)
+                                    <option value="heleket">Crypto Payment</option>
+                                @endif
+                                @if (sys_setting('moorle_payment') == 1)
+                                    <option value="moorle">Moorle Payment</option>
+                                @endif
                                 @if (sys_setting('perfect_payment') == 1)
                                     <option value="perfect">Perfect Money</option>
                                 @endif

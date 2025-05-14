@@ -51,9 +51,10 @@ class MonnifyUtility
             'paymentReference' => $data['reference'],
             'currencyCode' => $data['currency'] ?? 'NGN',
             'paymentDescription' => $data['description'],
-            'paymentMethods' => ['CARD'],
+            // 'paymentMethods' => ['CARD'],
             'redirectUrl' => $data->redirectUrl ?? url('monnify/success'),
             'contractCode' => $this->contractcode,
+            'metaData' => $data,
         ];
         $response = Http::withHeaders([
             'Authorization' => $this->getHeader(),

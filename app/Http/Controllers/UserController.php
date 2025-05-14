@@ -200,7 +200,6 @@ class UserController extends Controller
                         $sts = 'error';
                     }
                 }
-
             } else {
                 // return error without refund
                 $trans->save();
@@ -250,7 +249,6 @@ class UserController extends Controller
         if (Auth::user()->virtual_ref == null) {
             try {
                 $this->generate_bank();
-
             } catch (\Exception $e) {
                 // dd($e);
                 return redirect()->back()->withError('Virtual Account not Generated. Please Try again');
@@ -258,7 +256,6 @@ class UserController extends Controller
         }
 
         return redirect()->back()->withSuccess('Account number was Generated Successfully.');
-
     }
 
     public function generate_bank()
@@ -301,7 +298,7 @@ class UserController extends Controller
         $req = Purify::clean($request->all());
         $validator = Validator::make($req, [
             'amount' => 'required|numeric|min:'.sys_setting('min_deposit'),
-            'method' => 'required|in:paystack,flutterwave,paypal,monnify,coinbase,perfect,bank,binance',
+            'method' => 'required|in:paystack,flutterwave,paypal,monnify,coinbase,perfect,bank,binance,heleket,moorle',
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -340,41 +337,63 @@ class UserController extends Controller
         $request->session()->put('payment_data', $details);
         $request->session()->put('redirect_from', 'website');
 
+        // redirect directly to payment gateways.
+        $payC = app(PaymentController::class);
         // return $details;
         if ($request->method == 'flutterwave') {
-            return view('payments.flutterwave', compact('details'));
+            $response = $payC->initFlutterApi($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'paystack') {
-            return view('payments.paystack', compact('details'));
+            $response = $payC->initPaystack($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'monnify') {
-            return view('payments.monnify', compact('details'));
+            $response = $payC->initMonnify($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'paypal') {
-            return view('payments.paypal', compact('details'));
+            $response = $payC->initPaypal($details);
+            $response = $response->getData(true);
+            if ($response['status'] == 'success') {
+                return redirect($response['link']);
+            }
         } elseif ($request->method == 'perfect') {
-            $c = new PaymentController;
-            $data = $c->initPerfectMoney($details);
+            $data = $payC->initPerfectMoney($details);
 
+            // Deprecated
             return view('payments.perfect-money', compact('details', 'data'));
         } elseif ($request->method == 'coinbase') {
-            $c = new PaymentController;
-            $data = $c->initCoinbase($details);
+            $data = $payC->initCoinbase($details);
             if ($data['redirect'] == true) {
-                return view('payments.coinbase', compact('details', 'data'));
-            } else {
-                return redirect($data['redirect_url'])->withError('Payment was not successful');
+                return redirect($data['redirect_url']);
             }
         } elseif ($request->method == 'bank') {
             return view('payments.bank', compact('details'));
         } elseif ($request->method == 'binance') {
-            $c = new PaymentController;
-            $data = $c->initBinance($details);
+            $data = $payC->initBinance($details);
             if ($data['redirect'] == true) {
-                return view('payments.binance', compact('details', 'data'));
-            } else {
-                return redirect($data['redirect_url'])->withError('Payment was not successful');
+                return redirect($data['redirect_url']);
+            }
+        } elseif ($request->method == 'heleket') {
+            $data = $payC->initHeleket($details);
+            if ($data['status'] == 'success') {
+                return redirect($data['link']);
+            }
+        } elseif ($request->method == 'moorle') {
+            $data = $payC->initMoorle($details);
+            if ($data['status'] == 'success') {
+                return redirect($data['link']);
             }
         }
 
-        return back()->withError('Something went wrong');
+        return back()->withError('Payment Initialization failed.');
     }
 
     public function complete_deposit($details, $response = null)
@@ -409,6 +428,12 @@ class UserController extends Controller
             <br> <p> See Below for details of Transactions. </p>
                 Amount : '.format_price($trans->amount)."<br> Details: {$trans->message} <br> Reference : {$trans->code} <br> Balance: ".format_price($user->balance).'<br> Date : '.show_datetime($trans->created_at);
             general_email($user->email, 'Credit Alert', $e_mess);
+            // user notification
+            sendUserNotification(
+                $user,
+                'Deposit Successful',
+                $trans->message
+            );
             // give bonus
             give_deposit_bonus($user->id, $deposit->gateway, $deposit->amount);
             session()->remove('payment_data');
@@ -539,7 +564,6 @@ class UserController extends Controller
     {
         $categories = Category::has('services')->whereStatus(1)->orderBy('name', 'asc')->paginate(1000);
         if ($request->has('search')) {
-
         }
 
         return view($this->theme.'services', compact('request', 'categories'));
@@ -615,7 +639,6 @@ class UserController extends Controller
             $withdraw->type = 'wallet';
             $withdraw->save();
             $message = $trans->message;
-
         } elseif ($request->withdraw_type == 'bank') {
             if (sys_setting('min_withdraw') > $request->amount) {
                 return back()->with('error', 'You can not withdraw below the minimum withdrawal amount '.format_price(sys_setting('min_withdraw')));

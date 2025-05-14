@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Currency;
 use App\Models\Deposit;
+use App\Traits\ApiResponse;
 use App\Utility\Binance;
 use App\Utility\Coinbase;
+use App\Utility\Heleket;
 use App\Utility\MonnifyUtility as Monnify;
+use App\Utility\Moolre;
+use App\Utility\Paypal;
 use Auth;
 use Bhekor\LaravelFlutterwave\Facades\Flutterwave;
 use Http;
@@ -13,6 +18,8 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
+    use ApiResponse;
+
     // FLutter api payment
     public function initFlutterApi($details)
     {
@@ -104,16 +111,46 @@ class PaymentController extends Controller
         }
     }
 
+    public function initPaystack($details)
+    {
+        $amount = round($details['final']);
+        $currency = get_setting('currency_code');
+        $data = [
+            'email' => $details['email'],
+            'amount' => $amount * 100,
+            'currency' => $currency,
+            'reference' => $details['reference'],
+            'callback_url' => route('paystack.success'),
+            'metadata' => $details,
+        ];
+        $payment = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.paystack.co/transaction/initialize', $data)->json();
+
+        if ($payment['status'] !== true) {
+            return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'gateway' => 'paystack',
+            'message' => 'Payment Link generated successfully',
+            'link' => $payment['data']['authorization_url'],
+            'access_code' => $payment['data']['access_code'],
+        ], 200);
+    }
+
     public function paystack_success(Request $request)
     {
         // return $request;
         $payment = [];
         // The parameter after verify/ is the transaction reference to be verified
-        $url = 'https://api.paystack.co/transaction/verify/'.$request->reference;
+        $url = 'https://api.paystack.co/transaction/verify/' . $request->reference;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer '.env('PAYSTACK_SECRET_KEY')]);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . env('PAYSTACK_SECRET_KEY')]);
         $response = curl_exec($ch);
         curl_close($ch);
         if ($response) {
@@ -140,12 +177,34 @@ class PaymentController extends Controller
 
     }
 
+    public function initMonnify($details)
+    {
+        $amount = round($details['final']);
+        $rate = Currency::whereCode('NGN')->first()->rate ?? 1;
+        $details['amount'] = $amount * $rate;
+        $details['currency'] = 'NGN';
+        $details['redirectUrl'] = route('monnify.success');
+
+        $monnify = new Monnify;
+        $response = $monnify->initializePayment($details);
+        if ($response['responseMessage'] == 'success') {
+            return response()->json([
+                'status' => 'success',
+                'gateway' => 'monnify',
+                'message' => 'Payment Link generated successfully',
+                'link' => $response['responseBody']['checkoutUrl'],
+            ], 200);
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 403);
+        }
+    }
+
     // Monnify Success
     public function monnify_success(Request $request)
     {
         // return $request;
         $data = [
-            'paymentReference' => $request['reference'],
+            'paymentReference' => $request['paymentReference'],
         ];
         $details = $request->session()->get('payment_data');
 
@@ -154,6 +213,7 @@ class PaymentController extends Controller
 
         if ($response['responseMessage'] == 'success' && $response['responseBody']['paymentStatus'] == 'PAID') {
             $complete = new UserController;
+            $details = $response['responseBody']['metaData'];
 
             return $complete->complete_deposit($details, $response);
         } else {
@@ -164,7 +224,6 @@ class PaymentController extends Controller
 
             return redirect()->route('user.deposit')->withError('Payment not successful');
         }
-
     }
 
     public function listing_monnify_success(Request $request)
@@ -184,22 +243,69 @@ class PaymentController extends Controller
         }
     }
 
+    public function initPaypal($details)
+    {
+        $paypal = new Paypal;
+
+        $details['amount'] = $details['final2'];
+        $currency = 'USD';
+
+        $res = $paypal->createPayment($details['amount'], $details, $currency);
+        if (isset($res['status']) && $res['status'] === 'ERROR') {
+            return response()->json(['status' => 'error', 'message' => 'Unable to initialize payment'], 403);
+        }
+        $payLink = null;
+        foreach ($res['links'] as $link) {
+            if ($link['rel'] === 'approve') {
+                $payLink = $link['href'];
+                break;
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'gateway' => 'paypal',
+            'message' => 'Payment Link generated successfully',
+            'link' => $payLink,
+        ], 200);
+    }
+
     // Paypal success
     public function paypal_success(Request $request)
     {
         // return $request;
-        $details = $request->session()->get('payment_data');
-        $req = 'cmd=_notify-validate';
-        if (sys_setting('paypal_demo') == 1) {
-            $paypalURL = 'https://api.sandbox.paypal.com/v2/payments/captures/'; // use for sandbox text
-        } else {
-            $paypalURL = 'https://api.paypal.com/v2/payments/captures/';
+        $orderId = $request->token;
+        if (empty($orderId)) {
+            return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
         }
-        $url = $paypalURL.$request->token;
-        // get deposit and approve payment
-        $complete = new UserController;
+        $paypal = new Paypal;
+        $paymentData = $paypal->getOrderDetails($orderId);
+        $ref = $paymentData['purchase_units'][0]['custom_id'];
+        $deposit = Deposit::whereCode($ref)->firstOrFail();
+        if ($paymentData['status'] == 'APPROVED') {
+            // get deposit and build details
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
 
-        return $complete->complete_deposit($details, $request->all());
+            return $complete->complete_deposit($details, $paymentData);
+        }
+        $deposit->status = 3;
+        $deposit->save();
+
+        return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
     }
 
     // Perfect Money
@@ -226,7 +332,6 @@ class PaymentController extends Controller
         $response = Http::asForm()->post('https://perfectmoney.is/api/step1.asp', $val);
 
         return $send;
-
     }
 
     public function initPerfectMoney($details)
@@ -252,7 +357,6 @@ class PaymentController extends Controller
         $send['url'] = 'https://perfectmoney.is/api/step1.asp';
 
         return $send;
-
     }
 
     public function perfect_success(Request $request)
@@ -351,7 +455,6 @@ class PaymentController extends Controller
                 'message' => 'Payment Link generated successfully',
                 'link' => $response['data']['hosted_url'],
             ], 200);
-
         } else {
             return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 500);
         }
@@ -494,7 +597,6 @@ class PaymentController extends Controller
         } else {
             return response()->json(['status' => 'error', 'message' => 'Payment was not successful'], 500);
         }
-
     }
 
     public function binance_webhook(Request $request)
@@ -539,5 +641,186 @@ class PaymentController extends Controller
         }
 
         return $request;
+    }
+
+    // heleket
+    public function initHeleket($details)
+    {
+        $heleket = new Heleket;
+
+        $details['amount'] = $details['final2'];
+        $currency = 'USD';
+        $details['cancelUrl'] = route('user.deposit');
+
+        $res = $heleket->createPayment($details['amount'], $details, $currency);
+        if (isset($res['result']) && $res['result']['url'] != null) {
+            $payLink = $res['result']['url'];
+
+            return [
+                'status' => 'success',
+                'gateway' => 'heleket',
+                'message' => 'Payment Link generated successfully',
+                'link' => $payLink,
+            ];
+        } else {
+            return ['status' => 'error', 'message' => 'Unable to initialize payment'];
+        }
+    }
+
+    public function heleket_success(Request $request)
+    {
+        $response = $request->all();
+        // log webhook response
+        $logFile = 'public/heleket_webhook_response_log.txt';
+        $logMessage = json_encode($response, JSON_PRETTY_PRINT);
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        // validate webhook sign
+        $heleket = new Heleket;
+        if ($heleket->validateSignature($response, $response['sign']) == false) {
+            return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
+        }
+        $deposit = Deposit::where('code', $response['order_id'])->firstOrFail();
+        if ($response['status'] == 'paid') {
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
+
+            return $complete->complete_deposit($details, $response);
+        } else {
+
+            $deposit->status = 3;
+            $deposit->save();
+
+            return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
+        }
+    }
+
+    public function initMoorle($details)
+    {
+        $moorle = new Moolre;
+        $details['redirect'] = route('moorle.success');
+        // get GHS currency rate.
+        $rate = Currency::whereCode('GHS')->first()->rate ?? 1;
+        $details['amount'] = $details['final'] * $rate;
+        $res = $moorle->generatePaymentLink($details['amount'], $details, 'GHS');
+        if (isset($res['code']) && $res['code'] === 'POS09') {
+            $payLink = $res['data']['authorization_url'];
+
+            return [
+                'status' => 'success',
+                'gateway' => 'moorle',
+                'message' => 'Payment Link generated successfully',
+                'link' => $payLink,
+            ];
+        }
+
+        return ['status' => 'error', 'message' => 'Unable to initialize payment'];
+    }
+
+    public function moorle_success(Request $request)
+    {
+        $response = $request->all();
+        $moorle = new Moolre;
+        // log webhook response
+        $logFile = 'public/moorle_webhook_response_log.txt';
+        $logMessage = json_encode($response, JSON_PRETTY_PRINT);
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        $reference = $response['reference'] ?? null;
+        $deposit = Deposit::where('code', $reference)->firstOrFail();
+        if ($response['status'] == 'success') {
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
+
+            return $complete->complete_deposit($details, $response);
+        } else {
+
+            $deposit->status = 3;
+            $deposit->save();
+
+            return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
+        }
+    }
+
+    public function moorle_webhook(Request $request)
+    {
+        $response = $request->all();
+        $moorle = new Moolre;
+
+        // log webhook response
+        $logFile = 'public/moorle_webhook_response_log.txt';
+        $logMessage = json_encode($response, JSON_PRETTY_PRINT);
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        // validate webhook sign
+        if ($moorle->validateWebhook($response, $response['data']['secret']) == false) {
+            // return $this->callbackResponse('error', 'Invalid Payment', route('user.deposit'));
+        }
+        $ref = $response['data']['externalref'] ?? null;
+        $deposit = Deposit::where('code', $ref)->firstOrFail();
+        if ($response['data']['txstatus'] == 1) {
+            $user = $deposit->user;
+            $details = [
+                'amount' => $deposit->amount,
+                'final' => $deposit->final_amount,
+                'final2' => round($deposit->final_amount / get_setting('currency_rate'), 2),
+                'name' => $user->name(),
+                'user_id' => $user->id,
+                'deposit_id' => $deposit->id,
+                'phone' => $user->phone,
+                'description' => $deposit->message,
+                'gateway' => $deposit->gateway,
+                'email' => $user->email,
+                'reference' => $deposit->code,
+            ];
+            $complete = new UserController;
+
+            return $complete->complete_deposit($details, $response);
+        } else {
+
+            $deposit->status = 3;
+            $deposit->save();
+
+            return $this->callbackResponse('error', 'Payment was not successful', route('user.deposit'));
+        }
+    }
+    public function callbackResponse($type, $message, $url = null)
+    {
+        if (request()->wantsJson()) {
+            if ($type == 'success') {
+                return $this->successResponse($message);
+            }
+
+            return $this->errorResponse($message);
+        }
+
+        if ($type == 'success') {
+            return redirect($url)->withSuccess($message);
+        }
+
+        return redirect($url)->withError($message);
     }
 }

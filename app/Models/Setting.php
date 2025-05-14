@@ -11,7 +11,9 @@ class Setting extends Model
 
     protected $fillable = [
         'title',
-        'email', 'name', 'about',
+        'email',
+        'name',
+        'about',
         'description',
         'address',
         'phone',
@@ -21,13 +23,28 @@ class Setting extends Model
         'facebook',
         'twitter',
         'whatsapp',
-        'instagram', 'telegram',
+        'instagram',
+        'telegram',
         'primary_color',
-        'sec_color', 'currency', 'currency_rate',
+        'sec_color',
+        'currency',
+        'currency_rate',
         'currency_code',
         'custom_js',
         'custom_css',
         'is_adsense',
-        'meta_keywords', 'is_announcement', 'announcement', 'page_title', 'page_body',
+        'meta_keywords',
+        'is_announcement',
+        'announcement',
+        'page_title',
+        'page_body',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::saved(function () {
+            \Cache::forget('Settings');
+        });
+    }
 }

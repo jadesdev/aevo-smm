@@ -19,7 +19,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
-        'email', 'username',
+        'email',
+        'username',
     ];
 
     /**
@@ -33,7 +34,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'blocked',
         'verify_code',
         'email_verify',
-        'sms_verify', 'name', 'fname', 'lname', 'updated_at', 'created_at',
+        'sms_verify',
+        'name',
+        'fname',
+        'lname',
+        'updated_at',
+        'created_at',
     ];
 
     /**
@@ -101,6 +107,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function pointLogs()
     {
         return $this->hasMany(PointLog::class)->orderByDesc('id');
+    }
+
+    public function notify()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function notifys()
+    {
+        return $this->hasMany(Notification::class)->orderByDesc('updated_at')->whereView(0);
     }
 
     public function scopeSearchUser($query, $search)

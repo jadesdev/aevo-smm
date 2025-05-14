@@ -189,8 +189,13 @@ class OrderController extends Controller
         $mesg = '<p>Your Order has been updated </p> <ul><li> Order Id: '.$order->id.' </li><li> Remains: '.$order->remain.'</li> <li>Order status: '.$order->status.'</li></ul>';
         general_email($user->email, $sub, $mesg);
 
-        return back()->with('success', 'Order Updated Successfully');
+        sendUserNotification(
+            $user,
+            'Order Status Updated',
+            "Your Order: #{$order->id} is now {$order->status}. "
+        );
 
+        return back()->with('success', 'Order Updated Successfully');
     }
 
     public function update_order_status(Request $request)
@@ -228,7 +233,6 @@ class OrderController extends Controller
                         $trans->new_balance = $user->balance;
                         $trans->old_balance = $user->balance - $getBackAmo;
                         $trans->save();
-
                     }
                     $order->error = 0;
                     $order->status = $status;
@@ -242,6 +246,11 @@ class OrderController extends Controller
                         general_email($user->email, $sub, $mesg);
 
                         // send notification
+                        sendUserNotification(
+                            $user,
+                            'Order Completed',
+                            "Your Order: #{$order->id} is completed. "
+                        );
                     }
 
                     // send email
@@ -251,7 +260,6 @@ class OrderController extends Controller
                     // general_email($user->email, $sub, $mesg );
 
                     return $order;
-
                 });
 
                 return $logs;
