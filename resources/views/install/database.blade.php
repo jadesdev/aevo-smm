@@ -22,9 +22,8 @@
         </div>
     @endif
 
-    <form action="{{ route('install.environment') }}" method="POST" id="databaseForm">
+    <form action="{{ route('install.database.save') }}" method="POST" id="databaseForm">
         @csrf
-
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="app_name" class="form-label">Application Name</label>
@@ -82,7 +81,6 @@
         </div>
     </form>
 @endsection
-
 @section('scripts')
     <script>
         document.getElementById('testConnection').addEventListener('click', function() {
@@ -93,9 +91,10 @@
 
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Testing...';
             btn.disabled = true;
+            continueBtn.disabled = true; 
 
             const formData = new FormData();
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+            formData.append('_token', document.querySelector('input[name="_token"]').value);
             formData.append('db_host', document.getElementById('db_host').value);
             formData.append('db_port', document.getElementById('db_port').value);
             formData.append('db_name', document.getElementById('db_name').value);
@@ -108,7 +107,7 @@
                         resultDiv.innerHTML =
                             '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>' +
                             response.data.message + '</div>';
-                        continueBtn.disabled = false;
+                        continueBtn.disabled = false; 
                     } else {
                         resultDiv.innerHTML =
                             '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>' +
@@ -117,14 +116,26 @@
                     }
                 })
                 .catch(function(error) {
+                    let errorMessage = 'Connection test failed. Please check your credentials and server logs.';
+                    if (error.response && error.response.data && error.response.data.message) {
+                        errorMessage = error.response.data.message;
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
                     resultDiv.innerHTML =
-                        '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>Connection test failed. Please check your credentials.</div>';
+                        '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>' + errorMessage + '</div>';
                     continueBtn.disabled = true;
                 })
                 .finally(function() {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 });
+        });
+
+        document.getElementById('databaseForm').addEventListener('submit', function(e) {
+            const continueBtn = document.getElementById('continueBtn');
+            continueBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            continueBtn.disabled = true;
         });
     </script>
 @endsection
