@@ -22,9 +22,14 @@
         </div>
     @endif
 
-    <form action="{{ route('install.environment') }}" method="POST" id="databaseForm">
+    <form action="{{ route('install.database.save') }}" method="POST" id="databaseForm">
         @csrf
 
+        <div class="col-md-12 mb-3 ">
+            <label for="site_url" class="form-label">Site URL</label>
+            <input type="url" class="form-control" id="site_url" name="site_url" value="{{ url('/') }}"
+                required>
+        </div>
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="app_name" class="form-label">Application Name</label>

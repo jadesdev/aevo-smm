@@ -31,7 +31,7 @@
         </div>
     @endif
 
-    <form action="{{ route('install.complete') }}" method="POST" id="installForm">
+    <form action="{{ route('install.settings.save') }}" method="POST" id="installForm">
         @csrf
 
         <div class="card mb-4">
@@ -42,8 +42,8 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="admin_email" class="form-label">Admin Email</label>
-                        <input type="email" class="form-control" id="admin_email" name="admin_email" required value="{{ old('admin_email') }}"
-                            placeholder="admin@example.com">
+                        <input type="email" class="form-control" id="admin_email" name="admin_email" required
+                            value="{{ old('admin_email') }}" placeholder="admin@example.com">
                     </div>
                     <div class="col-md-6">
                         <label for="admin_password" class="form-label">Admin Password</label>
@@ -67,7 +67,7 @@
         </div>
 
         <div class="d-sm-flex justify-content-between">
-            <a href="{{ route('install.database') }}" class="btn btn-outline-secondary mb-2">
+            <a href="{{ route('install.database.show') }}" class="btn btn-outline-secondary mb-2">
                 <i class="fas fa-arrow-left me-2"></i>Back
             </a>
 

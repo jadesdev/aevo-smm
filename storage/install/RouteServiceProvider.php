@@ -37,12 +37,12 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('user-api')
                 ->group(base_path('routes/user_api.php'));
 
-            Route::middleware('web')
+            Route::middleware(['web', 'telementry'])
                 ->prefix('admin')
                 ->as('admin.')
                 ->group(base_path('routes/admin.php'));
 
-            Route::middleware('web')
+            Route::middleware(['web', 'telementry'])
                 ->group(base_path('routes/web.php'));
 
             // Route::middleware('web')

@@ -62,7 +62,7 @@
         </a>
 
         @if ($allPassed)
-            <a href="{{ route('install.database') }}" class="btn btn-installer">
+            <a href="{{ route('install.database.show') }}" class="btn btn-installer">
                 Next <i class="fas fa-arrow-right ms-2"></i>
             </a>
         @else

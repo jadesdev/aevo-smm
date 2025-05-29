@@ -136,7 +136,8 @@ class InstallController extends Controller
             'db_port' => 'required|numeric',
             'db_name' => 'required',
             'db_username' => 'required',
-            'db_password' => 'nullable'
+            'db_password' => 'nullable',
+            'site_url' => 'required|url',
         ]);
 
         $this->updateEnvironmentFile($request->all());
@@ -144,10 +145,13 @@ class InstallController extends Controller
         // Reload configuration to use new database settings
         $this->setDatabaseConfig($request->all());
 
+        // drop database
+        $this->dropTables();
+
         // Upload database
         $this->importSql();
 
-        return view('install.environment');
+        return to_route('install.settings.show');
     }
 
     public function setting()
@@ -173,36 +177,32 @@ class InstallController extends Controller
                 } catch (Exception $e) {
                     \Log::error('Failed to create admin user: ' . $e->getMessage());
 
-                    return redirect()->route('install.database')->withErrors(['error' => 'Failed to create admin user: ' . $e->getMessage()]);
+                    return redirect()->route('install.settings.show')->withErrors(['error' => 'Failed to create admin user: ' . $e->getMessage()])->withInput();
                 }
             }
 
             Log::info('Installation almost complete');
-            // try {
-            //     // Clear and cache configurations
-            //     Artisan::call('config:clear');
-            //     Artisan::call('cache:clear');
-            //     Artisan::call('route:clear');
-            //     Artisan::call('view:clear');
-            //     Artisan::call('config:cache');
-            // } catch (Exception $e) {
-            //     // Config cache might fail in some environments
-            //     \Log::warning('Config cache failed: ' . $e->getMessage());
-            // }
+            try {
+                // Clear and cache configurations
+                Artisan::call('config:clear');
+                Artisan::call('cache:clear');
+                Artisan::call('route:clear');
+                Artisan::call('view:clear');
+                Artisan::call('config:cache');
+            } catch (Exception $e) {
+                // Config cache might fail in some environments
+                \Log::warning('Config cache failed: ' . $e->getMessage());
+            }
 
             // Mark installation as complete
             $this->markInstallationComplete();
 
             // Store success information in session for completion page
-            // session(['installer_complete' => true, 'admin_created' => $adminCreated]);
+            session(['installer_complete' => true, 'admin_created' => $adminCreated]);
 
-            // Clear installer session data
-            // session()->forget('installer');
-
-            return view('install.complete');
+            return view('install.compete');
         } catch (Exception $e) {
             \Log::error('Installation failed: ' . $e->getMessage());
-            return "Installation failed";
             return back()->withErrors(['error' => 'Installation failed: ' . $e->getMessage()]);
         }
     }
@@ -225,6 +225,7 @@ class InstallController extends Controller
         // Define all the replacements we need to make
         $replacements = [
             '/^APP_NAME=.*$/m' => 'APP_NAME="' . $config['app_name'] . '"',
+            '/^APP_URL=.*$/m' => 'APP_URL="' . $config['site_url'] . '"',
             '/^APP_KEY=.*$/m' => 'APP_KEY=' . $this->generateAppKey(),
             '/^DB_HOST=.*$/m' => 'DB_HOST=' . $config['db_host'],
             '/^DB_PORT=.*$/m' => 'DB_PORT=' . $config['db_port'],
@@ -321,10 +322,11 @@ class InstallController extends Controller
             } else {
                 // Create new admin user
                 User::create([
+                    'name' => 'Admin User',
                     'fname' => 'Admin',
                     'lname' => 'User',
                     'username' => 'admin' . Str::random(4),
-                    'role' => 'admin',
+                    'user_role' => 'admin',
                     'email_verify' => 1,
                     'email' => $email,
                     'password' => bcrypt($password),
@@ -339,15 +341,41 @@ class InstallController extends Controller
 
     private function markInstallationComplete()
     {
-        // Create installation marker file
-        File::put(storage_path('installed'), date('Y-m-d H:i:s'));
-
-        // Copy necessary files
+        $url = request()->getSchemeAndHttpHost();
+        File::put(storage_path('telementry'), $url);
+        $this->writeUrlToServicesConfig($url);
         $oldsp = base_path('app/Providers/RouteServiceProvider.php');
         copy($this->install_files('RouteServiceProvider.php'), $oldsp);
     }
 
-    // Install copy files
+    protected function writeUrlToServicesConfig($url)
+    {
+        $configPath = config_path('services.php');
+
+        if (!file_exists($configPath)) {
+            throw new \Exception("Config file not found.");
+        }
+
+        $configContent = file_get_contents($configPath);
+
+        if (str_contains($configContent, "'something' =>")) {
+            $configContent = preg_replace(
+                "/('something'\s*=>\s*)['\"][^'\"]*['\"]/",
+                "'something' => '" . addslashes($url) . "'",
+                $configContent
+            );
+        } else {
+            $configContent = preg_replace(
+                '/\];\s*$/',
+                "    'something' => '" . addslashes($url) . "',\n];",
+                $configContent
+            );
+        }
+
+        file_put_contents($configPath, $configContent);
+    }
+
+
     public function install_files($name)
     {
         $file = base_path('storage/install/' . $name);
