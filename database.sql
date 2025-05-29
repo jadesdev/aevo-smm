@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 19, 2024 at 07:56 PM
+-- Generation Time: May 29, 2025 at 04:07 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `beta`
+-- Database: `aevo`
 --
 
 -- --------------------------------------------------------
@@ -38,6 +38,13 @@ CREATE TABLE `api_providers` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `api_providers`
+--
+
+INSERT INTO `api_providers` (`id`, `name`, `api_url`, `api_key`, `balance`, `status`, `desc`, `created_at`, `updated_at`) VALUES
+(1, 'Instaking', 'https://instaking.ng/api/v1', '', 3345.7328, 1, NULL, '2024-05-22 13:57:16', '2024-05-22 13:57:16');
 
 -- --------------------------------------------------------
 
@@ -114,6 +121,33 @@ CREATE TABLE `categories` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `currencies`
+--
+
+CREATE TABLE `currencies` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `symbol` varchar(255) NOT NULL,
+  `code` varchar(255) DEFAULT NULL,
+  `rate` double(10,5) NOT NULL DEFAULT 1.00000,
+  `default` int(11) NOT NULL DEFAULT 0,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `currencies`
+--
+
+INSERT INTO `currencies` (`id`, `name`, `symbol`, `code`, `rate`, `default`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'Nigerian Naira', '₦', 'NGN', 1.00000, 0, 1, '2024-08-27 13:57:47', '2024-08-27 18:09:10'),
+(2, 'US Dollars', '$', 'USD', 0.00063, 0, 1, '2024-08-27 14:00:46', '2024-08-27 18:14:38'),
+(3, 'Pounds', 'E', 'GBP', 0.00400, 0, 1, '2024-08-27 19:22:53', '2024-08-27 19:25:39');
 
 -- --------------------------------------------------------
 
@@ -455,7 +489,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (18, '2023_09_22_095308_update_orders_table', 13),
 (19, '2023_09_22_134631_update_deposits_table', 14),
 (20, '2023_09_22_134631_update_deposit_table', 15),
-(21, '2023_04_26_211948_create_updates_table', 16);
+(21, '2023_04_26_211948_create_updates_table', 16),
+(22, '2025_05_08_154153_create_notifications_table', 17);
 
 -- --------------------------------------------------------
 
@@ -528,6 +563,24 @@ CREATE TABLE `newsletters` (
   `content` longtext DEFAULT NULL,
   `status` tinyint(4) NOT NULL DEFAULT 2,
   `date` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) DEFAULT NULL,
+  `type` enum('user','advertiser','others') NOT NULL DEFAULT 'user',
+  `title` varchar(255) DEFAULT NULL,
+  `message` varchar(255) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `view` tinyint(4) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -675,6 +728,25 @@ CREATE TABLE `personal_access_tokens` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `point_logs`
+--
+
+CREATE TABLE `point_logs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `code` varchar(255) NOT NULL,
+  `type` enum('credit','debit') NOT NULL DEFAULT 'credit',
+  `amount` double(20,2) NOT NULL,
+  `point` double(9,2) NOT NULL DEFAULT 0.00,
+  `status` smallint(6) NOT NULL DEFAULT 2,
+  `message` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `power_trxes`
 --
 
@@ -772,7 +844,7 @@ CREATE TABLE `settings` (
 --
 
 INSERT INTO `settings` (`id`, `title`, `name`, `about`, `description`, `phone`, `address`, `email`, `favicon`, `logo`, `facebook`, `twitter`, `instagram`, `telegram`, `whatsapp`, `primary_color`, `custom_css`, `custom_js`, `is_announcement`, `currency`, `currency_code`, `currency_rate`, `page_title`, `page_body`, `announcement`, `is_adsense`, `google_adsense`, `is_analytics`, `google_analytics_id`, `last_cron`, `created_at`, `updated_at`) VALUES
-(1, 'Instaking', 'Instaking', 'Africa\'s No.1 Social Media Marketing Service Provider', 'Instaking helps Businesses, Musicians, Influencers and Social Media users build their online presence and get more visibility on all Social Media and Music Streaming platforms.', NULL, NULL, NULL, 'HesUNC0TV0favicon.png', 'JEsXh3T1lslogo.png', NULL, NULL, NULL, NULL, NULL, NULL, '<style>\r\n\r\n</style>', NULL, 1, '₦', 'NGN', 1250.000, 'Terms and Conditions', '<p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Terms Of Services</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">The use of services provided by Instaking establishes agreement to these terms. By registering or using our services you agree that you have read and fully understood the following terms of Service and Instaking will not be held liable for loss in any way for users who have not read the below terms of service! &nbsp;</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">SECTION 1.1</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking does not guarantee a delivery time for any services. We offer our best estimation for when the order will be delivered. This is only an estimation and Instaking will not refund orders that are processing if you feel they are taking too long.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">SECTION 1.2</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ We reserve the right to change these terms of service without any notice. You are expected to read all terms of service before placing every order to insure you are up to date with any changes or any future changes.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">&nbsp;SECTION 1.3</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking rates are subject to change at any time without notice. The payment/refund policy stays in effect in the case of rate changes.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">SECTION 2</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Affiliates</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ If a customer use many accounts then We won\'t add anything for referral. And affiliates just accept with auto payment, Not manual payment.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">2.1</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Disclaimers</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking will not be responsible for any damages you or your business may suffer.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Liabilities</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking is in no way liable for any account suspension or picture deletion done by Instagram or Twitter or Facebook or YouTube or Other Social Media.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">2.2</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Refund Policy</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ After a deposit has been completed, No refunds will be made. There is no way to reverse it. You must use your balance on our platform. You agree that once you complete a payment, you will not file a dispute or a chargeback against us for any reason.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ If you file a dispute or charge-back against us after a deposit, we reserve the right to terminate all of your future orders/ban you from our site.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Fraudulent activity such as using unauthorized or stolen credit cards will lead to termination of your account. There are no exceptions.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Privacy Policy</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">This policy covers how we use your personal information. We take your privacy seriously and will take all measures to protect your personal information. Any personal information received will only be used to fill your order. We will not sell or redistribute your information to anyone.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Regards,</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">INSTAKING</p>', NULL, 1, NULL, 1, NULL, '2024-01-25 12:22:22', NULL, '2024-05-01 20:57:01');
+(1, 'Instaking', 'Instaking', 'Africa\'s No.1 Social Media Marketing Service Provider', 'Instaking helps Businesses, Musicians, Influencers and Social Media users build their online presence and get more visibility on all Social Media and Music Streaming platforms.', NULL, NULL, NULL, 'HesUNC0TV0favicon.png', 'JEsXh3T1lslogo.png', NULL, NULL, NULL, NULL, NULL, NULL, '<style>\r\n\r\n</style>', NULL, 1, '₦', 'NGN', 1.000, 'Terms and Conditions', '<p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Terms Of Services</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">The use of services provided by Instaking establishes agreement to these terms. By registering or using our services you agree that you have read and fully understood the following terms of Service and Instaking will not be held liable for loss in any way for users who have not read the below terms of service! &nbsp;</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">SECTION 1.1</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking does not guarantee a delivery time for any services. We offer our best estimation for when the order will be delivered. This is only an estimation and Instaking will not refund orders that are processing if you feel they are taking too long.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">SECTION 1.2</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ We reserve the right to change these terms of service without any notice. You are expected to read all terms of service before placing every order to insure you are up to date with any changes or any future changes.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">&nbsp;SECTION 1.3</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking rates are subject to change at any time without notice. The payment/refund policy stays in effect in the case of rate changes.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">SECTION 2</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Affiliates</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ If a customer use many accounts then We won\'t add anything for referral. And affiliates just accept with auto payment, Not manual payment.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">2.1</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Disclaimers</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking will not be responsible for any damages you or your business may suffer.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Liabilities</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Instaking is in no way liable for any account suspension or picture deletion done by Instagram or Twitter or Facebook or YouTube or Other Social Media.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">2.2</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Refund Policy</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ After a deposit has been completed, No refunds will be made. There is no way to reverse it. You must use your balance on our platform. You agree that once you complete a payment, you will not file a dispute or a chargeback against us for any reason.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ If you file a dispute or charge-back against us after a deposit, we reserve the right to terminate all of your future orders/ban you from our site.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">✔ Fraudulent activity such as using unauthorized or stolen credit cards will lead to termination of your account. There are no exceptions.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Privacy Policy</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">This policy covers how we use your personal information. We take your privacy seriously and will take all measures to protect your personal information. Any personal information received will only be used to fill your order. We will not sell or redistribute your information to anyone.</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\"><br></p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">Regards,</p><p class=\"p1\" style=\"margin-bottom: 1em; color: rgb(73, 80, 87); font-family: &quot;Source Sans Pro&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 15px;\">INSTAKING</p>', NULL, 1, NULL, 1, NULL, '2024-01-25 12:22:22', NULL, '2024-05-22 14:06:00');
 
 -- --------------------------------------------------------
 
@@ -839,14 +911,18 @@ INSERT INTO `system_settings` (`id`, `name`, `value`, `created_at`, `updated_at`
 (27, 'is_affiliate', '1', '2023-10-17 08:08:51', '2023-10-17 08:08:51'),
 (28, 'referral_commission', '3', '2023-10-17 08:09:13', '2023-10-17 08:10:13'),
 (29, 'min_withdraw', '1000', '2023-10-17 08:09:13', '2023-10-17 08:09:13'),
-(30, 'homepage_theme', 'theme2', '2023-10-22 11:10:18', '2023-10-22 11:10:18'),
+(30, 'homepage_theme', 'theme1', '2023-10-22 11:10:18', '2025-05-10 10:51:25'),
 (31, 'is_https', '1', '2023-10-23 01:54:39', '2023-11-17 01:02:41'),
 (32, 'is_welcome_bonus', '0', '2023-12-19 14:12:15', '2024-01-19 16:53:16'),
 (33, 'welcome_bonus', '200', '2023-12-19 14:12:21', '2024-01-09 13:15:55'),
 (34, 'is_welcome_message', '0', '2023-12-19 14:12:26', '2024-01-19 16:53:18'),
 (35, 'welcome_message', 'Welcome to Instaking. You’ve been credited with N200 to test a service.', '2023-12-19 14:14:20', '2023-12-29 12:55:06'),
-(36, 'verify_email', '0', '2023-12-21 22:09:53', '2024-01-19 16:53:32'),
-(37, 'binance_payment', '1', '2023-12-29 12:46:26', '2023-12-29 12:46:26');
+(36, 'verify_email', '1', '2023-12-21 22:09:53', '2024-05-22 13:37:33'),
+(37, 'binance_payment', '1', '2023-12-29 12:46:26', '2023-12-29 12:46:26'),
+(38, 'is_maintenance', '0', '2024-08-13 10:15:26', '2024-08-13 10:41:46'),
+(39, 'multi_currency', '1', '2024-08-31 00:45:20', '2024-08-31 00:45:20'),
+(40, 'heleket_payment', '1', '2025-05-10 11:05:21', '2025-05-10 11:05:21'),
+(41, 'moorle_payment', '1', '2025-05-10 11:05:22', '2025-05-10 11:05:22');
 
 -- --------------------------------------------------------
 
@@ -921,6 +997,7 @@ CREATE TABLE `users` (
   `country` varchar(255) DEFAULT NULL,
   `balance` decimal(20,4) NOT NULL DEFAULT 0.0000,
   `bonus` double(20,3) NOT NULL DEFAULT 0.000,
+  `points` double(20,3) NOT NULL DEFAULT 0.000,
   `deal_wallet` decimal(20,3) NOT NULL DEFAULT 0.000,
   `api_token` varchar(80) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
@@ -946,13 +1023,6 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `ref_id`, `name`, `user_role`, `fname`, `lname`, `username`, `email`, `phone`, `country`, `balance`, `bonus`, `deal_wallet`, `api_token`, `image`, `address`, `verify_method`, `bvn`, `nin`, `kyc_status`, `virtual_ref`, `virtual_banks`, `bank_name`, `acc_name`, `acc_number`, `status`, `blocked`, `verify_code`, `wm`, `email_verify`, `sms_verify`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 0, 'Admin User', 'admin', 'Admin', 'User', 'admin', 'admin@gmail.com', '09012345678', NULL, 0.0000, 0.000, 0.000, 'b13225be12e99ba61d19d15d6d770526', NULL, NULL, NULL, NULL, NULL, 2, NULL, NULL, NULL, NULL, NULL, 1, 0, NULL, 0, 0, 0, '2024-05-01 16:05:15', '$2y$10$TLtpggNwbPu6OGhOZ5ppOObRKe6TrVDiVtlL9utrfFDZ/sVhLECK2', 'F9zvjeQCLNojwWFKw5qxdvFssQ7OxXvwVBhfr9gKlENVys5g6TcXxs9XxZ8S', '2024-05-01 16:50:15', '2024-05-01 16:50:15');
 
 -- --------------------------------------------------------
 
@@ -997,6 +1067,12 @@ ALTER TABLE `cable_plans`
 -- Indexes for table `categories`
 --
 ALTER TABLE `categories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `currencies`
+--
+ALTER TABLE `currencies`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1104,6 +1180,13 @@ ALTER TABLE `newsletters`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `notifications_user_id_index` (`user_id`);
+
+--
 -- Indexes for table `orders`
 --
 ALTER TABLE `orders`
@@ -1141,6 +1224,13 @@ ALTER TABLE `personal_access_tokens`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`);
+
+--
+-- Indexes for table `point_logs`
+--
+ALTER TABLE `point_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `point_logs_user_id_foreign` (`user_id`);
 
 --
 -- Indexes for table `power_trxes`
@@ -1216,7 +1306,7 @@ ALTER TABLE `withdrawals`
 -- AUTO_INCREMENT for table `api_providers`
 --
 ALTER TABLE `api_providers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `cable_plans`
@@ -1229,6 +1319,12 @@ ALTER TABLE `cable_plans`
 --
 ALTER TABLE `categories`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `currencies`
+--
+ALTER TABLE `currencies`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `data_bundles`
@@ -1294,7 +1390,7 @@ ALTER TABLE `list_trxes`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `networks`
@@ -1312,6 +1408,12 @@ ALTER TABLE `network_trxes`
 -- AUTO_INCREMENT for table `newsletters`
 --
 ALTER TABLE `newsletters`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -1337,6 +1439,12 @@ ALTER TABLE `payment_bonuses`
 --
 ALTER TABLE `personal_access_tokens`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `point_logs`
+--
+ALTER TABLE `point_logs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `power_trxes`
@@ -1366,7 +1474,7 @@ ALTER TABLE `support_tickets`
 -- AUTO_INCREMENT for table `system_settings`
 --
 ALTER TABLE `system_settings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `ticket_comments`
@@ -1390,7 +1498,7 @@ ALTER TABLE `updates`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `withdrawals`
@@ -1407,6 +1515,12 @@ ALTER TABLE `withdrawals`
 --
 ALTER TABLE `listing_offers`
   ADD CONSTRAINT `listing_offers_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `point_logs`
+--
+ALTER TABLE `point_logs`
+  ADD CONSTRAINT `point_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
