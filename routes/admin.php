@@ -46,10 +46,10 @@ Route::middleware('admin')->group(function () {
 
         // Panel Status
         Route::get('/panel-status', 'panel_status')->name('panel.status');
-        // POINT system
+        // point system
         Route::get('/point-system', 'pointSystem')->name('point-system');
     });
-
+    
     // Currency
     Route::controller(CurrencyController::class)->prefix('currency')->as('currency.')->group(function () {
         Route::get('/', 'index')->name('index');
