@@ -31,6 +31,7 @@ Route::prefix('auth')->group(function () {
 // User Profile
 Route::prefix('user')->controller(UserController::class)->middleware('auth:sanctum')->group(function () {
     Route::get('/profile', 'profile');
+    Route::get('/balance', 'balance');
     Route::get('generate-account', 'generate_account');
     Route::get('logout', 'logout');
     Route::post('/profile-image', 'update_profile_image');
@@ -44,6 +45,8 @@ Route::prefix('user')->controller(UserController::class)->middleware('auth:sanct
     Route::get('deposits', 'deposits');
     // Transactions
     Route::get('transactions', 'transactions');
+    // Delete account
+    Route::delete('delete-account', 'deleteAccount');
 
 });
 

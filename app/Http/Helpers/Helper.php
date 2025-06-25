@@ -56,7 +56,6 @@ if (! function_exists('sys_setting')) {
         return $setting == null ? $default : $setting->value;
     }
 }
-
 function text_trim($string, $length = null)
 {
     if (empty($length)) {
@@ -116,7 +115,6 @@ function get_trx_type($status)
         default:
             return '<span class="order-status os-pending">credit</span>';
     }
-
 }
 
 function get_status($status)
@@ -134,7 +132,6 @@ function get_status($status)
         default:
             return '<span class="badge bg-warning">unknown</span>';
     }
-
 }
 function get_trx_status($status)
 {
@@ -154,7 +151,6 @@ function get_trx_status($status)
         default:
             return '<span class="badge bg-secondary">unknown</span>';
     }
-
 }
 function payment_gateway($name)
 {
@@ -182,7 +178,6 @@ function get_ticket_status($status)
         default:
             return '<span class="badge bg-secondary">unknown</span>';
     }
-
 }
 
 function list_status($status)
@@ -200,7 +195,6 @@ function list_status($status)
         default:
             return '<span class="badge bg-secondary">unknown</span>';
     }
-
 }
 
 function publish_status($status)
@@ -218,7 +212,6 @@ function publish_status($status)
         default:
             return '<span class="badge bg-secondary">unknown</span>';
     }
-
 }
 
 function listoffer_status($status)
@@ -236,11 +229,9 @@ function listoffer_status($status)
         default:
             return "<span class='badge bg-secondary'>{$status}</span>";
     }
-
 }
 function get_order_status($status)
 {
-
     switch ($status) {
         case 'pending':
             $result = '<span class="order-status os-pending">Pending</span>';
@@ -269,7 +260,6 @@ function get_order_status($status)
     }
 
     return $result;
-
 }
 function get_payout_status($status)
 {
@@ -289,7 +279,6 @@ function get_payout_status($status)
         default:
             return '<span class="badge bg-secondary">unknown</span>';
     }
-
 }
 
 function getTrx($length = 12)
@@ -369,7 +358,6 @@ function generateToken()
 
 function send_post_request($url, $postdata = null)
 {
-
     try {
         $response = Http::asMultipart()->post($url, $postdata)->json();
 
@@ -380,7 +368,6 @@ function send_post_request($url, $postdata = null)
             'message' => $e->getMessage(),
         ];
     }
-
 }
 
 // short code replacer
@@ -404,7 +391,6 @@ function general_email($email, $sub, $mes)
 
 function send_emails($email, $sub, $mess, $id = null)
 {
-
     $data['subject'] = $sub;
     $data['message'] = $mess;
     try {
@@ -412,7 +398,6 @@ function send_emails($email, $sub, $mess, $id = null)
     } catch (\Exception $e) {
         // dd($e);
     }
-
 }
 
 function formatAndValidateUsername($username)
@@ -582,7 +567,6 @@ function give_affiliate_bonus($id, $amount)
             "You earned a referral bonus from {$user->username}"
         );
     }
-
 }
 
 function get_bank_name($code)
@@ -694,7 +678,6 @@ function giveUserPoint($id, $amount)
 
         return true;
     }
-
 }
 // currency
 function get_all_active_currency()

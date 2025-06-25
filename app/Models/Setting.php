@@ -38,6 +38,10 @@ class Setting extends Model
         'announcement',
         'page_title',
         'page_body',
+        'popup_status',
+        'popup_image',
+        'popup_message',
+        'popup_title',
     ];
 
     protected static function boot()

@@ -22,7 +22,7 @@ class User
             if (auth()->user()->user_role == 'admin' || auth()->user()->user_role == 'staff') {
                 $redirect_to = 'admin.login';
             } else {
-                $redirect_to = 'login';
+                $redirect_to = 'index';
             }
 
             auth()->logout();
@@ -44,8 +44,6 @@ class User
             }
         } else {
             session(['link' => url()->current()]);
-
-            return redirect()->route('login')->withError('Login to continue');
 
             return redirect()->route('index');
         }

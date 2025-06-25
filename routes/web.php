@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/blocked', [App\Http\Controllers\ResellController::class, 'panelBlocked'])->name('blocked');
 Route::get('/clear', function () {
     \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return \Illuminate\Support\Facades\Artisan::call('queue:retry all');
 });
 // quework
 Route::get('queue-work', function () {
@@ -39,14 +40,13 @@ Route::get('admin-panel-login/{code}', [AdminController::class, 'loginFromPanel'
 
 Route::get('/maintenance', [App\Http\Controllers\HomeController::class, 'maintenance'])->name('maintenance');
 // Maintenence mode
-Route::middleware('maintenance')->group(function () {
 
+Route::middleware('maintenance')->group(function () {
     Route::get('login', [App\Http\Controllers\Auth\LoginController::class, 'user_login'])->name('login');
     Route::prefix('auth')->group(function () {
         Auth::routes(['verify' => true]);
     });
     Route::get('auth/login', [App\Http\Controllers\Auth\LoginController::class, 'user_login']);
-
     Route::post('/auth/login', [App\Http\Controllers\Auth\LoginController::class, 'submit_login'])->name('signin');
     // Register
     Route::controller(RegisterController::class)->middleware('reseller')->group(function () {
@@ -67,10 +67,9 @@ Route::middleware('maintenance')->group(function () {
         Route::get('/services', 'services')->name('services');
         Route::get('/terms', 'terms')->name('terms');
         Route::get('/old-users', 'old_user_function')->name('olduser');
-        Route::get('/refund-trx', 'debitUser')->name('refund');
     });
 
-    Route::middleware('user', 'verified', 'reseller')->prefix('user')->as('user.')->group(function () {
+    Route::middleware('auth', 'user', 'verified','reseller')->prefix('user')->as('user.')->group(function () {
         Route::controller(UserController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/dashboard', 'index')->name('dashboard');
@@ -195,9 +194,9 @@ Route::controller(PaymentController::class)->group(function () {
     Route::any('/webhook/binance-notification/', 'binance_webhook')->name('binance.webhook');
     Route::any('/monnify/success/listings', 'listing_monnify_success')->name('monnify.success.listing');
     Route::any('/heleket-success', 'heleket_success')->name('heleket.success');
-    Route::get('moorle-success', 'moorle_success')->name('moorle.success');
+    Route::any('moorle-success', 'moorle_success')->name('moorle.success');
     Route::any('moorle-webhook', 'moorle_webhook')->name('moorle.webhook');
 });
 // Monify webhook
-Route::any('/webhook/monnify-transactions', [App\Http\Controllers\PaymentController::class, 'monnify_webhook'])->name('monnify.webhook');
+Route::any('/webhook/monnify-transact/', [App\Http\Controllers\PaymentController::class, 'monnify_webhook'])->name('monnify.webhook');
 // API Payment IPN

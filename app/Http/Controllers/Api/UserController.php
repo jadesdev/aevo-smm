@@ -4,9 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\PaymentController;
+use App\Models\DecoderTrx;
 use App\Models\Deposit;
+use App\Models\Listing;
+use App\Models\ListingOffer;
+use App\Models\NetworkTrx;
+use App\Models\Order;
+use App\Models\PowerTrx;
+use App\Models\SupportTicket;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Withdrawal;
 use App\Utility\MonnifyUtility;
 use Auth;
 use Cache;
@@ -34,7 +42,19 @@ class UserController extends Controller
             'message' => 'User Profile Fetched Successful',
             'user' => $user,
         ]);
-
+    }
+    public function balance(Request $request)
+    {
+        $user = Auth::user();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User Balance Fetched Successful',
+            'data' => [
+                'balance' => $user->balance,
+                'currency' => get_setting('currency_code'),
+                'bonus' => $user->bonus,
+            ],
+        ]);
     }
 
     public function update_profile(Request $request)
@@ -44,7 +64,7 @@ class UserController extends Controller
             'fname' => 'required|string|max:60',
             'lname' => 'required|string|max:60',
             'country' => 'nullable|string|max:50',
-            'phone' => 'required|string|max:20|unique:users,phone,'.$user->id,
+            'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
             'address' => 'nullable|string|max:250',
             'image' => 'nullable|image|mimes:jpg,png,svg,webp|max:10240',
         ]);
@@ -87,17 +107,17 @@ class UserController extends Controller
         $user = Auth::user();
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = Str::random(23).'.jpg';
+            $imageName = Str::random(23) . '.jpg';
             // if aws or local storage
             if ($user->image != null) {
                 try {
-                    unlink(public_path('uploads/'.$user->image));
+                    unlink(public_path('uploads/' . $user->image));
                 } catch (\Throwable $th) {
                     // throw $th;
                 }
             }
             $image->move(public_path('uploads/user'), $imageName);
-            $user->image = 'user/'.$imageName;
+            $user->image = 'user/' . $imageName;
         } else {
             return response()->json([
                 'status' => 'error',
@@ -146,7 +166,6 @@ class UserController extends Controller
             }
 
             return response()->json(['status' => 'error', 'message' => 'Old Password is incorrect'], 400);
-
         } catch (\Throwable $th) {
             // throw $th;
             return response()->json([
@@ -247,7 +266,6 @@ class UserController extends Controller
                         $sts = 'error';
                     }
                 }
-
             } else {
                 // return error without refund
                 $trans->save();
@@ -278,7 +296,7 @@ class UserController extends Controller
                 'email' => $user['email'],
                 'name' => $user->name(),
                 'currency' => get_setting('currency_code'),
-                'reference' => \getTrx(8).$user['username'],
+                'reference' => \getTrx(8) . $user['username'],
             ];
             $response = $monnify->reserveAccount($data);
             if ($response['responseMessage'] == 'success') {
@@ -292,7 +310,6 @@ class UserController extends Controller
                     'message' => 'Virtual Accounts not created! Please try again',
                 ], 400);
             }
-
         }
 
         return response()->json([
@@ -300,7 +317,6 @@ class UserController extends Controller
             'message' => 'Accounts Generated Successfully',
             'data' => json_decode($user->virtual_banks),
         ], 200);
-
     }
 
     // Logout
@@ -346,8 +362,8 @@ class UserController extends Controller
     {
         $req = Purify::clean($request->all());
         $validator = Validator::make($req, [
-            'amount' => 'required|numeric|min:'.sys_setting('min_deposit'),
-            'method' => 'required|in:flutterwave,coinbase,perfect,binance',
+            'amount' => 'required|numeric|min:' . sys_setting('min_deposit'),
+            'method' => 'required|in:flutterwave,coinbase,perfect,binance,heleket,moorle',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -366,7 +382,7 @@ class UserController extends Controller
         $deposit->user_id = $user->id;
         $deposit->type = 'card'; // 1- event, 2- form, 3-vote
         $deposit->code = getTrx();
-        $deposit->message = 'Wallet deposit funding of '.format_price($request->amount);
+        $deposit->message = 'Wallet deposit funding of ' . format_price($request->amount);
         $deposit->gateway = $request->method;
         $deposit->amount = $request->amount;
         $deposit->charge = $charge;
@@ -396,6 +412,10 @@ class UserController extends Controller
             return $data = $c->initCoinbaseApi($details);
         } elseif ($request->method == 'binance') {
             return $data = $c->initBinanceApi($details);
+        } elseif ($request->method == 'heleket') {
+            return $data = $c->initHeleket($details);
+        } elseif ($request->method == 'moorle') {
+            return $data = $c->initMoorle($details);
         }
 
         $deposit->delete();
@@ -457,5 +477,77 @@ class UserController extends Controller
             'next_page' => $result->nextPageUrl(),
             'last_page' => $result->lastPage(),
         ];
+    }
+
+    // Delete user account
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+        // delete deposits
+        $dpt = Deposit::whereUserId($user->id)->get();
+        $dpt->each(function ($tx) {
+            $tx->forceDelete();
+        });
+        // delete tickets
+        $sp = SupportTicket::whereUserId($user->id)->get();
+        $sp->each(function ($tx) {
+            // delete ticket comments
+            $tx->comments()->forceDelete();
+            $tx->forceDelete();
+        });
+        // delete transactions
+        $trx = Transaction::whereUserId($user->id)->get();
+        $trx->each(function ($tx) {
+            $tx->forceDelete();
+        });
+        // delete orders
+        $ord = Order::whereUserId($user->id)->get();
+        $ord->each(function ($tx) {
+            $tx->forceDelete();
+        });
+        // delete withdrawals
+        $wdt = Withdrawal::whereUserId($user->id)->get();
+        $wdt->each(function ($tx) {
+            $tx->delete();
+        });
+        // delete offers
+        $odt = ListingOffer::whereUserId($user->id)->get();
+        $odt->each(function ($tx) {
+            $tx->delete();
+        });
+        // delete Listings
+        $ldt = Listing::whereUserId($user->id)->get();
+        $ldt->each(function ($tx) {
+            // comments
+            $tx->comments()->delete();
+            $tx->transactions()->delete();
+            $tx->delete();
+        });
+        // network trx
+        $ntx = NetworkTrx::whereUserId($user->id)->get();
+        $ntx->each(function ($tx) {
+            $tx->forceDelete();
+        });
+        // Decoder trx
+        $dctx = DecoderTrx::whereUserId($user->id)->get();
+        $dctx->each(function ($tx) {
+            $tx->forceDelete();
+        });
+        // Power trx
+        $ptx = PowerTrx::whereUserId($user->id)->get();
+        $ptx->each(function ($tx) {
+            $tx->delete();
+        });
+
+        // log user out
+        // $user->tokens()->delete();
+        // delete main user
+        $user->delete();
+
+        // auth()->logout();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User Account Deleted successfully',
+        ]);
     }
 }

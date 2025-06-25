@@ -77,7 +77,7 @@ class DealController extends Controller
         $banks = json_decode($banks);
         $payouts = Withdrawal::whereUserId(Auth::id())->whereType('bank')->whereService('listing')->get();
 
-        return view($this->theme.'deals.wallet', compact('banks', 'payouts'));
+        return view($this->theme . 'deals.wallet', compact('banks', 'payouts'));
     }
 
     public function view($slug)
@@ -88,7 +88,7 @@ class DealController extends Controller
         }
         $similar = Listing::whereAccountType($listing->account_type)->where('id', '!=', $listing->id)->whereStatus(1)->whereSold(2)->limit(4)->get();
 
-        return view($this->theme.'deals.view', compact('listing', 'similar'));
+        return view($this->theme . 'deals.view', compact('listing', 'similar'));
     }
 
     public function my_deals()
@@ -96,7 +96,7 @@ class DealController extends Controller
         $listings = Listing::whereUserId(Auth::id())->get();
         $type = 'index';
 
-        return view($this->theme.'deals.deals', compact('type', 'listings'));
+        return view($this->theme . 'deals.deals', compact('type', 'listings'));
     }
 
     public function account_details($id)
@@ -107,7 +107,7 @@ class DealController extends Controller
         }
         $trx = $listing->transaction;
 
-        return view($this->theme.'deals.seller.view_offer', compact('listing', 'trx'));
+        return view($this->theme . 'deals.seller.view_offer', compact('listing', 'trx'));
     }
 
     public function edit($id)
@@ -120,7 +120,7 @@ class DealController extends Controller
             return back()->withError('Product has been sold. You cannot edit it.');
         }
 
-        return view($this->theme.'deals.seller.edit', compact('listing'));
+        return view($this->theme . 'deals.seller.edit', compact('listing'));
 
     }
 
@@ -132,7 +132,7 @@ class DealController extends Controller
         }
         $offers = $listing->offers;
 
-        return view($this->theme.'deals.seller.offers', compact('offers', 'listing'));
+        return view($this->theme . 'deals.seller.offers', compact('offers', 'listing'));
 
     }
 
@@ -140,7 +140,7 @@ class DealController extends Controller
     {
         $listings = ListingOffer::where('user_id', Auth::id())->with('listing')->get();
 
-        return view($this->theme.'deals.myoffers', compact('listings'));
+        return view($this->theme . 'deals.myoffers', compact('listings'));
     }
 
     // Bought accounts
@@ -148,7 +148,7 @@ class DealController extends Controller
     {
         $listings = ListTrx::where('buyer_id', Auth::id())->wherePaid(1)->orderByDesc('id')->with('listing')->get();
 
-        return view($this->theme.'deals.myoffers', compact('listings'));
+        return view($this->theme . 'deals.myoffers', compact('listings'));
     }
 
     public function view_account($id)
@@ -162,7 +162,7 @@ class DealController extends Controller
         }
         $listing = $trx->listing;
 
-        return view($this->theme.'deals.account', compact('listing', 'trx'));
+        return view($this->theme . 'deals.account', compact('listing', 'trx'));
     }
 
     public function view_offer($id)
@@ -177,7 +177,7 @@ class DealController extends Controller
         $listing = $offer->listing;
         $trx = $offer->transaction;
 
-        return view($this->theme.'deals.view_offer', compact('offer', 'listing', 'trx'));
+        return view($this->theme . 'deals.view_offer', compact('offer', 'listing', 'trx'));
     }
 
     public function seller_view_offer($id)
@@ -189,7 +189,7 @@ class DealController extends Controller
         $listing = $offer->listing;
         $trx = $offer->transaction;
 
-        return view($this->theme.'deals.seller.view_offer', compact('offer', 'listing', 'trx'));
+        return view($this->theme . 'deals.seller.view_offer', compact('offer', 'listing', 'trx'));
     }
 
     public function reject_offer($id)

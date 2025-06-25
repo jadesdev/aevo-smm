@@ -34,7 +34,6 @@ class OrderController extends Controller
                 $this->theme = 'user.';
         }
     }
-
     //
     public function create()
     {
@@ -285,7 +284,7 @@ class OrderController extends Controller
                     give_affiliate_bonus($user->id, $amount);
                 }
                 // give user point
-                giveUserPoint($user->id, $amount);
+                // giveUserPoint($user->id , $order->price);
 
             } else {
                 // $order->status = 'canceled';
@@ -303,7 +302,7 @@ class OrderController extends Controller
         // Send email to admin
         $sub = get_setting('title').'- New Order';
 
-        $content = '<p><strong>Hi Admin!</strong></p><p>Someone have already placed order successfully on <strong>'.get_setting('title').'</strong> with following details:</p><ul><li>Email: <strong>'.$user->email.'</strong></li><li>OrderID:  <strong>'.$order->id.'</strong>  </li><li>Amount:  <strong>'.format_price($trans->amount).'</strong>    </li></ul>';
+        $content = '<p><strong>Hi Admin!</strong></p><p>Someone have already placed order successfully on <strong>'.get_setting('title').'</strong> with following details:</p><ul><li>Email: <strong>'.$user->email.'</strong></li><li>OrderID:  <strong>'.$order->id.'</strong> Â </li><li>Amount:  <strong>'.format_price($trans->amount).'</strong>Â  Â Â </li></ul>';
 
         $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($trans->amount).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
@@ -311,7 +310,8 @@ class OrderController extends Controller
         send_emails(get_setting('email'), $sub, $content);
         general_email($user->email, 'Order Placed Successfully', $e_mess);
 
-        return redirect()->route('user.orders.create')->withSuccess('Order Placed Successfully'.$pmsg);
+        return redirect()->route('user.orders.create')->withSuccess('Order Placed Successfully.'.$pmsg);
+
     }
 
     // get services
@@ -338,7 +338,7 @@ class OrderController extends Controller
     {
         $service = Service::find($request->service);
         if ($service) {
-            $html = view('user.orders.form', compact('service'))->render();
+            $html = view($this->theme.'orders.form', compact('service'))->render();
 
             return response()->json(['html' => $html]);
         } else {

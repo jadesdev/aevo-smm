@@ -185,7 +185,7 @@ class OrderController extends Controller
         if (sys_setting('point_system') == 1) {
             $pvalue = sys_setting('point_value');
             $point = round($amount / $pvalue, 1);
-            $pmsg = " You earned 💎{$point}";
+            $pmsg = "- You earned 💎{$point}";
         }
 
         if (($service->manual_api == 0)) {
@@ -229,8 +229,7 @@ class OrderController extends Controller
                     give_affiliate_bonus($user->id, $amount);
                 }
                 // give user point
-                giveUserPoint($user->id, $amount);
-
+                // giveUserPoint($user->id , $amount);
             } else {
                 // $order->status = 'canceled';
                 $order->api_order_id = $apidata['order'] ?? null;
@@ -247,7 +246,7 @@ class OrderController extends Controller
         // Send email to admin
         $sub = get_setting('title').'- New Order via APP';
 
-        $content = '<p><strong>Hi Admin!</strong></p><p>Someone have already placed order successfully on <strong>'.get_setting('title').'</strong> with following details:</p><ul><li>Email: <strong>'.$user->email.'</strong></li><li>OrderID:  <strong>'.$order->id.'</strong>  </li><li>Amount:  <strong>'.format_price($trans->amount).'</strong>    </li></ul>';
+        $content = '<p><strong>Hi Admin!</strong></p><p>Someone have already placed order successfully on <strong>'.get_setting('title').'</strong> with following details:</p><ul><li>Email: <strong>'.$user->email.'</strong></li><li>OrderID:  <strong>'.$order->id.'</strong> Â </li><li>Amount:  <strong>'.format_price($trans->amount).'</strong>Â  Â Â </li></ul>';
 
         $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($trans->amount).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>

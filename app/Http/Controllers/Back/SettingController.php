@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Back;
 
 use App\Http\Controllers\Controller;
+use App\Mail\Sendmail;
 use App\Models\Setting;
 use App\Models\SystemSetting;
 use App\Models\Update;
+use App\Models\User;
 use Artisan;
 use Illuminate\Http\Request;
+use Mail;
 use Str;
 
 class SettingController extends Controller
@@ -51,6 +54,13 @@ class SettingController extends Controller
             $imageName = Str::random(10).'logo.png';
             $image->move(public_path('uploads'), $imageName);
             $input['logo'] = $imageName;
+        }
+
+        if ($request->hasFile('popup_image')) {
+            $image = $request->file('popup_image');
+            $imageName = Str::random(15).'popup.png';
+            $image->move(public_path('uploads'), $imageName);
+            $input['popup_image'] = $imageName;
         }
 
         $setting = Setting::first();
@@ -146,10 +156,23 @@ class SettingController extends Controller
     public function news_setting_create(Request $request)
     {
         // return $request;
-        $data = new Update;
-        $data->title = $request->title;
-        $data->message = $request->message;
-        $data->save();
+        $news = new Update;
+        $news->title = $request->title;
+        $news->message = $request->message;
+        $news->save();
+        // send email to users about news update
+        $users = User::whereStatus(1)->get();
+        $data['view'] = 'email.newsletter';
+        $data['subject'] = $request->title;
+        $data['email'] = env('MAIL_FROM_ADDRESS');
+        $data['message'] = $request->message;
+        foreach ($users as $key => $user) {
+            try {
+                Mail::to($user->email)->queue(new Sendmail($data));
+            } catch (\Exception $e) {
+                // dd($e);
+            }
+        }
 
         return redirect()->back()->with('success', __('News update created Successfully.'));
     }
