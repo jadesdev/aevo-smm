@@ -28,7 +28,6 @@ class CronController extends Controller
         $general->save();
 
         return 'success';
-
     }
 
     public function provider_service_update(Request $request)
@@ -80,7 +79,6 @@ class CronController extends Controller
                     $trans->new_balance = $user->balance;
                     $trans->old_balance = $user->balance - $getBackAmo;
                     $trans->save();
-
                 }
                 // partial orders
                 if ($order->status == 'partial' && $order->remain != 0) {
@@ -105,7 +103,6 @@ class CronController extends Controller
                     $trans->new_balance = $user->balance;
                     $trans->old_balance = $user->balance - $getBackAmo;
                     $trans->save();
-
                 }
 
                 if ($order->status == 'canceled') {
@@ -128,11 +125,14 @@ class CronController extends Controller
                     $trans->new_balance = $user->balance;
                     $trans->old_balance = $user->balance - $getBackAmo;
                     $trans->save();
-
                 }
                 // send email if order is completed
                 if ($order->status == 'completed') {
                     $user = $order->user;
+
+                    // give user point
+                    giveUserPoint($user->id, $order->price);
+
                     $sub = 'Order Completed';
                     $mesg = "Hi {$user->username}, <br>  <p>Your Order with ID {$order->id} is completed. Would You like to make a new order?</p> <br>
                     <a href='".route('user.orders.create')."' style='display: inline-block; background-color: #fa6e39; border: none; color: white; padding: 10px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px;'>New Order</a>";
@@ -144,12 +144,9 @@ class CronController extends Controller
                         'Order Completed',
                         "Your Order: #{$order->id} is completed. "
                     );
-
                 }
-
             }
         }
-
     }
 
     public function order_refill_status()

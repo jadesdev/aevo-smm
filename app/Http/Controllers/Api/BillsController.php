@@ -286,8 +286,9 @@ class BillsController extends Controller
             if (sys_setting('is_affiliate') == 1) {
                 give_affiliate_bonus($user->id, $plan->price);
             }
+
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $plan->price);
 
             $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($plan->price).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
@@ -499,8 +500,9 @@ class BillsController extends Controller
             if (sys_setting('is_affiliate') == 1) {
                 give_affiliate_bonus($user->id, $cost);
             }
+
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $cost);
 
             $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($request->amount).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
@@ -695,8 +697,9 @@ class BillsController extends Controller
             if (sys_setting('is_affiliate') == 1) {
                 give_affiliate_bonus($user->id, $request->amount);
             }
+
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $request->amount);
 
             $res['status'] = 'success';
             $res['message'] = $trx->name;
@@ -882,7 +885,7 @@ class BillsController extends Controller
                 give_affiliate_bonus($user->id, $request->amount);
             }
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $request->amount);
 
             $res['status'] = 'success';
             $res['message'] = $trx->name;

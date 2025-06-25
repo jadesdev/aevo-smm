@@ -32,7 +32,6 @@ class HomeController extends Controller
             default:
                 $this->theme = 'front.';
         }
-
     }
 
     /**
@@ -44,7 +43,7 @@ class HomeController extends Controller
     {
         $faqs = Faq::whereStatus(1)->get();
 
-        return view($this->theme.'index', compact('faqs'));
+        return view($this->theme . 'index', compact('faqs'));
     }
 
     public function services(Request $request)
@@ -64,24 +63,24 @@ class HomeController extends Controller
 
         // }
 
-        return view($this->theme.'services', compact('search', 'categories', 'categoriz'));
+        return view($this->theme . 'services', compact('search', 'categories', 'categoriz'));
     }
 
     public function api_docs()
     {
-        return view($this->theme.'apidocs');
+        return view($this->theme . 'apidocs');
     }
 
     public function faq()
     {
         $faqs = Faq::whereStatus(1)->get();
 
-        return view($this->theme.'faq', compact('faqs'));
+        return view($this->theme . 'faq', compact('faqs'));
     }
 
     public function terms()
     {
-        return view($this->theme.'terms');
+        return view($this->theme . 'terms');
     }
 
     public function logout()
@@ -103,8 +102,8 @@ class HomeController extends Controller
             $user = new User;
             $user->lname = $item['last_name'];
             $user->fname = $item['first_name'];
-            $user->name = $user->fname.' '.$user->lname;
-            $user->username = formatAndValidateUsername($item->first_name).Str::random(4);
+            $user->name = $user->fname . ' ' . $user->lname;
+            $user->username = formatAndValidateUsername($item->first_name) . Str::random(4);
             $user->email = $item->email;
             $user->balance = $item->balance;
             $user->user_role = 'user';

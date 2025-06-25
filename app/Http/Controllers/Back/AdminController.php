@@ -174,6 +174,13 @@ class AdminController extends Controller
         return back()->withSuccess('Payment Bonus Updated successfully');
     }
 
+    public function delete_payment_bonus($id, Request $request)
+    {
+        PaymentBonus::find($id)->delete();
+
+        return back()->withSuccess('Payment Bonus Deleted successfully');
+    }
+
     public function withdrawal()
     {
         $withdraws = Withdrawal::whereType('bank')->orderByDesc('id')->paginate(30);

@@ -21,12 +21,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'username',
-        'fname',
-        'lname',
-        'password',
-        'user_role',
-        'email_verified_at',
-        'email_verify'
     ];
 
     /**
@@ -67,12 +61,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getFullnameAttribute()
     {
-        return $this->fname . ' ' . $this->lname;
+        return $this->fname.' '.$this->lname;
     }
 
     public function name()
     {
-        return $this->fname . ' ' . $this->lname;
+        return $this->fname.' '.$this->lname;
     }
 
     public function refer()

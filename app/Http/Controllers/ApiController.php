@@ -129,14 +129,19 @@ class ApiController extends Controller
     // Place order
     public function add($request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'service' => 'required',
-            'link' => 'required',
-            'quantity' => 'required|integer',
+            'link' => 'nullable|url',
+            'quantity' => 'required|integer|min:1',
         ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->messages()->first()], 422);
-        }
+        // $validator = Validator::make($request->all(), [
+        //     'service' => 'required',
+        //     'link' => 'required',
+        //     'quantity' => 'required|integer'
+        // ]);
+        // if ($validator->fails()) {
+        //     return response()->json(['error' => $validator->messages()->first()], 422);
+        // }
         // Get user
         $user = User::where('api_token', $request->key)->first();
         // get service
@@ -144,18 +149,30 @@ class ApiController extends Controller
         if (! $service) {
             return response()->json(['error' => 'The selected service is invalid.'], 422);
         }
+        // check is service is special
+        $sOrders = $service->orders()->where('user_id', $user->id)->today()->count();
+        if ($service->s_type == 'special' && $sOrders >= 1) {
+            // return error
+            return response()->json(['error' => 'This is a special service. You can only order it once daily'], 422);
+        }
         $quantity = $request['quantity'];
-        if ($service->dripfeed == 1) {
+        if ($service->dripfeed == 1 && $request->runs != null) {
             $rules['runs'] = 'required|integer|not_in:0';
             $rules['interval'] = 'required|integer|not_in:0';
-            $validator = Validator::make($request, $rules);
+            $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json(['error' => $validator->messages()->first()], 422);
             }
             $quantity = $request['quantity'] * $request['runs'];
         }
-
+        if ($service->min > $quantity) {
+            return response()->json(['error', "Order quantity should be minimum {$service->min} "]);
+        }
+        if ($quantity > $service->max) {
+            return response()->json(['error', "Order quantity should be maximum {$service->max}"]);
+        }
         if ($service->min <= $quantity && $service->max >= $quantity) {
+
             $price = round(($quantity * $service->price) / 1000, 2);
             if ($user->balance < $price) {
                 return response()->json(['error' => "You don't have sufficient balance."], 400);

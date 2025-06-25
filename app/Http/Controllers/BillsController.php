@@ -146,7 +146,7 @@ class BillsController extends Controller
                 give_affiliate_bonus($user->id, $request->amount);
             }
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $cost);
 
             $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($request->amount).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
@@ -298,8 +298,9 @@ class BillsController extends Controller
             if (sys_setting('is_affiliate') == 1) {
                 give_affiliate_bonus($user->id, $plan->price);
             }
+
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $plan->price);
 
             $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($plan->price).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
@@ -506,8 +507,9 @@ class BillsController extends Controller
             if (sys_setting('is_affiliate') == 1) {
                 give_affiliate_bonus($user->id, $cost);
             }
+
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $cost);
 
             $e_mess = "Hi {$user->username}, <br> A debit transaction  of <b>".format_price($request->amount).'</b> occured on your Account.
             <br> <p> See Below for details of Transactions. </p>
@@ -636,7 +638,7 @@ class BillsController extends Controller
         $trans->type = 2; // 1- credit, 2- deit, 3-others
         $trans->code = getTrx();
         $trans->message = 'Pending transaction '.$request['amount'].' Purchase '.$disco->name.' for '.$request->number;
-        $trans->amount = $request->amount;
+        $trans->amount = $cost;
         $trans->status = 2;
         $trans->charge = $disco->fee;
         $trans->service = 'electricity'; // electricity
@@ -649,7 +651,7 @@ class BillsController extends Controller
         $trx->electricity_id = $disco->id;
         $trx->code = $trans['code'];
         $trx->name = $trans->message;
-        $trx->amount = $request->amount;
+        $trx->amount = $cost;
         $trx->status = 2; // 1 - success , 2- pending, 3 -declined
         $trx->customer_name = $request->customer_name;
         $trx->number = $request->number;
@@ -689,7 +691,7 @@ class BillsController extends Controller
                 give_affiliate_bonus($user->id, $request->amount);
             }
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $cost);
 
             $res['status'] = 'success';
             $res['url'] = route('user.transactions');
@@ -711,7 +713,7 @@ class BillsController extends Controller
             $trx->response = json_encode($response);
             $trx->save();
             // refund user
-            $user->balance = $user->balance + $request->amount;
+            $user->balance = $user->balance + $cost;
             $user->save();
             // cancel transaction
             $res['status'] = 'error';
@@ -811,7 +813,7 @@ class BillsController extends Controller
         $trans->type = 2; // 1- credit, 2- deit, 3-others
         $trans->code = getTrx();
         $trans->message = 'Pending transaction for '.$request['amount'].' Purchase '.$disco->name.' for '.$request->number;
-        $trans->amount = $request->amount;
+        $trans->amount = $cost;
         $trans->status = 2;
         $trans->charge = $disco->fee;
         $trans->service = 'betting'; // betting
@@ -824,7 +826,7 @@ class BillsController extends Controller
         $trx->betsite_id = $disco->id;
         $trx->code = $trans['code'];
         $trx->name = $trans->message;
-        $trx->amount = $request->amount;
+        $trx->amount = $cost;
         $trx->status = 2; // 1 - success , 2- pending, 3 -declined
         $trx->customer_name = $request->customer_name ?? '';
         $trx->number = $request->number;
@@ -860,7 +862,7 @@ class BillsController extends Controller
                 give_affiliate_bonus($user->id, $request->amount);
             }
             // give user point
-            giveUserPoint($user->id, $trx->amount);
+            giveUserPoint($user->id, $cost);
 
             $res['status'] = 'success';
             $res['url'] = route('user.transactions');

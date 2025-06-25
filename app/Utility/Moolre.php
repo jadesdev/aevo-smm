@@ -121,6 +121,6 @@ class Moolre
             'response' => $response->json(),
         ]);
 
-        throw new Exception('Moolre API request failed: '.json_encode($response->json()));
+        throw new Exception('Moolre API request failed: ' . json_encode($response->json()));
     }
 }

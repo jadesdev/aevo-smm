@@ -30,8 +30,6 @@ class SupportController extends Controller
                 $this->theme = 'user.';
         }
     }
-
-    //
     public function tickets()
     {
         $title = 'All Support Tickets';
