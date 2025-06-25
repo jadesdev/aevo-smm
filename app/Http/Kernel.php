@@ -68,5 +68,6 @@ class Kernel extends HttpKernel
         'reseller' => \App\Http\Middleware\Renewal::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'maintenance' => \App\Http\Middleware\Maintenance::class,
+        'telementry' => \App\Http\Middleware\CheckTelementry::class,
     ];
 }
